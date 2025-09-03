@@ -279,6 +279,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import com.example.resumeanalyzer.core.database.DatabaseModule
+import com.example.resumeanalyzer.core.navigation.datastore.UserPreference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -388,6 +389,9 @@ fun LoginScreen(
 //                                    errorMessage = "Invalid credentials or wrong role"
 //                                }
                                 if (user != null && user.role == role) {
+                                    scope.launch {
+                                        UserPreference.saveUser(context, user.email, user.role)
+                                    }
                                     if (role == "Student") {
                                         onStudentLogin(user.email)
                                     } else {

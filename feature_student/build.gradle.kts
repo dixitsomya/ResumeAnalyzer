@@ -40,6 +40,7 @@ android {
 
 dependencies {
 
+    implementation(project(":core"))
     implementation(platform("androidx.compose:compose-bom:2025.07.00"))
 
     implementation("androidx.compose.ui:ui")

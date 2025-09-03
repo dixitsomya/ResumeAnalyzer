@@ -164,7 +164,8 @@ fun StudentSplashScreen(
             Column(
                 modifier = Modifier.padding(36.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            )
+            {
                 // White circular background with logo inside
                 Box(
                     modifier = Modifier

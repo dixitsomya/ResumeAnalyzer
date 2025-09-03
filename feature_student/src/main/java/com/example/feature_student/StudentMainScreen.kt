@@ -303,9 +303,467 @@
 //    }
 //}
 
+//----------------------------------  code without settings    -------------------------------------------------------------------------
+
+//package com.example.feature_student
+//
+//import androidx.compose.foundation.background
+//import androidx.compose.foundation.layout.*
+//import androidx.compose.foundation.shape.CircleShape
+//import androidx.compose.foundation.shape.RoundedCornerShape
+//import androidx.compose.material.icons.Icons
+//import androidx.compose.material.icons.filled.*
+//import androidx.compose.material3.*
+//import androidx.compose.runtime.*
+//import androidx.compose.ui.Alignment
+//import androidx.compose.ui.Modifier
+//import androidx.compose.ui.draw.clip
+//import androidx.compose.ui.graphics.Brush
+//import androidx.compose.ui.graphics.Color
+//import androidx.compose.ui.platform.LocalContext
+//import androidx.compose.ui.text.font.FontWeight
+//import androidx.compose.ui.unit.dp
+//import androidx.compose.ui.unit.sp
+//import kotlinx.coroutines.launch
+//import androidx.navigation.NavController
+//import com.example.resumeanalyzer.core.navigation.datastore.UserPreference
+//
+//
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun StudentMainScreen(
+//    userEmail: String,
+//    navController: NavController,
+//    onNavigate: (String) -> Unit
+//) {
+//    val context = LocalContext.current
+//    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+//    val scope = rememberCoroutineScope()
+//    var showLogoutMenu by remember { mutableStateOf(false) }
+//
+//    ModalNavigationDrawer(
+//        drawerState = drawerState,
+//        drawerContent = {
+//            ModalDrawerSheet(
+//                modifier = Modifier
+//                    .fillMaxHeight()
+//                    .width(320.dp),
+//                drawerContainerColor = Color(0xFFF5F6FA)
+//            ) {
+//                // 🔹 Top User Section
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(16.dp),
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    Box(
+//                        modifier = Modifier
+//                            .size(70.dp)
+//                            .clip(CircleShape)
+//                            .background(Color(0xFF6C63FF)),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Text(
+//                            userEmail.firstOrNull()?.uppercase() ?: "?",
+//                            color = Color.White,
+//                            fontSize = 28.sp
+//                        )
+//                    }
+//                    Spacer(modifier = Modifier.height(8.dp))
+//                    Text(userEmail, fontSize = 14.sp, color = Color.DarkGray)
+//                }
+//
+//                Spacer(Modifier.height(16.dp))
+//
+//                // 🔹 Drawer Items
+//                DrawerItem(Icons.Default.Home, "Home") { onNavigate("home") }
+//                DrawerItem(Icons.Default.UploadFile, "Upload Resume") { onNavigate("upload") }
+//                DrawerItem(Icons.Default.BarChart, "ATS Score") { onNavigate("ats") }
+//                DrawerItem(Icons.Default.TipsAndUpdates, "Suggestions") { onNavigate("suggestions") }
+//                DrawerItem(Icons.Default.History, "History") { onNavigate("history") }
+//
+//                Spacer(modifier = Modifier.weight(1f))
+//
+//                Divider()
+//
+//                // 🔹 Bottom: Settings + Logout
+//               DrawerItem(Icons.Default.Settings, "Settings") { onNavigate("settings") }
+////                DrawerItem(Icons.Default.Settings, "Settings") {
+////                    scope.launch { drawerState.close() }
+////                    navController.navigate("settings")
+////                }
+//
+//
+//                DrawerItem(Icons.Default.Logout, "Logout") {
+//                    scope.launch {
+//                        UserPreference.clearUser(context)
+//                    }
+//                    navController.navigate("login") {
+//                        popUpTo("studentMain/$userEmail") { inclusive = true }
+//                    }
+//                }
+//
+//            }
+//        }
+//    ) {
+//        Scaffold(
+//            topBar = {
+//                TopAppBar(
+//                    title = { Text("Resume Analyser") },
+//                    navigationIcon = {
+//                        IconButton(onClick = {
+//                            scope.launch { drawerState.open() }
+//                        }) {
+//                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+//                        }
+//                    }
+//                )
+//            }
+//        ) { innerPadding ->
+//            HomeDashboardContent(
+//                userEmail = userEmail,
+//                modifier = Modifier.padding(innerPadding),
+//                onNavigate = onNavigate
+//            )
+//        }
+//    }
+//}
+//
+//@Composable
+//fun DrawerItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, onClick: () -> Unit) {
+//    NavigationDrawerItem(
+//        label = { Text(text, fontSize = 16.sp) },
+//        selected = false,
+//        onClick = onClick,
+//        icon = { Icon(icon, contentDescription = text) },
+//        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+//    )
+//}
+//
+//@Composable
+//fun HomeDashboardContent(userEmail: String, modifier: Modifier = Modifier, onNavigate: (String) -> Unit) {
+//    Column(
+//        modifier = modifier
+//            .fillMaxSize()
+//            .background(
+//                Brush.verticalGradient(
+//                    listOf(Color(0xFF6C63FF), Color(0xFFB388FF))
+//                )
+//            )
+//            .padding(16.dp)
+//    ) {
+//        // 🔹 Welcome
+//        Text(
+//            text = "Welcome back, ${userEmail.substringBefore('@')} 👋",
+//            color = Color.White,
+//            fontWeight = FontWeight.Bold,
+//            fontSize = 22.sp
+//        )
+//        Spacer(Modifier.height(16.dp))
+//
+//        // 🔹 Quick Actions
+//        Text("Quick Actions", color = Color.White, fontSize = 18.sp)
+//        Spacer(Modifier.height(8.dp))
+//        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+//            QuickActionCard("Upload Resume", Icons.Default.UploadFile) { onNavigate("upload") }
+//            QuickActionCard("ATS Score", Icons.Default.BarChart) { onNavigate("ats") }
+//            QuickActionCard("Suggestions", Icons.Default.TipsAndUpdates) { onNavigate("suggestions") }
+//        }
+//
+//        Spacer(Modifier.height(24.dp))
+//
+//        // 🔹 Stats Section
+//        Text("Your Stats", color = Color.White, fontSize = 18.sp)
+//        Spacer(Modifier.height(8.dp))
+//        Card(
+//            modifier = Modifier.fillMaxWidth(),
+//            shape = RoundedCornerShape(16.dp),
+//            colors = CardDefaults.cardColors(containerColor = Color.White)
+//        ) {
+//            Column(Modifier.padding(16.dp)) {
+//                // Agar data nahi mila → placeholder text
+//                Text("No stats available yet", color = Color.Gray)
+//            }
+//        }
+//
+//        Spacer(Modifier.height(24.dp))
+//
+//        // 🔹 Recent History
+//        Text("Recent History", color = Color.White, fontSize = 18.sp)
+//        Spacer(Modifier.height(8.dp))
+//        Card(
+//            modifier = Modifier.fillMaxWidth(),
+//            shape = RoundedCornerShape(16.dp),
+//            colors = CardDefaults.cardColors(containerColor = Color.White)
+//        ) {
+//            Column(Modifier.padding(16.dp)) {
+//                // Agar history nahi hai → placeholder
+//                Text("No resumes analyzed yet", color = Color.Gray)
+//            }
+//        }
+//    }
+//}
+//
+//@Composable
+//fun QuickActionCard(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+//    Card(
+//        modifier = Modifier
+//            .size(100.dp)
+//            .padding(4.dp),
+//        shape = RoundedCornerShape(16.dp),
+//        onClick = onClick,
+//        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f))
+//    ) {
+//        Column(
+//            modifier = Modifier.fillMaxSize(),
+//            verticalArrangement = Arrangement.Center,
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            Icon(icon, contentDescription = title, tint = Color(0xFF6C63FF))
+//            Spacer(Modifier.height(4.dp))
+//            Text(title, fontSize = 12.sp)
+//        }
+//    }
+//}
+
+
+
+
+
+
+
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun StudentMainScreen(
+//    navController: NavController,
+//    onNavigate: (String) -> Unit
+//) {
+//    val context = LocalContext.current
+//    val user by UserPreference.getUser(context).collectAsState(initial = UserCache())
+//    val userEmail = user.email ?: "Guest" // fallback
+//    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+//    val scope = rememberCoroutineScope()
+//    var showLogoutMenu by remember { mutableStateOf(false) }
+//    //val drawerColor = if (isSystemInDarkTheme()) Color(0xFF121212) else Color(0xFFF5F6FA)
+//
+//
+//    ModalNavigationDrawer(
+//        drawerState = drawerState,
+//        drawerContent = {
+//            ModalDrawerSheet(
+//                modifier = Modifier
+//                    .fillMaxHeight()
+//                    .width(320.dp),
+////                drawerContainerColor = Color(0xFFF5F6FA)
+//                drawerContainerColor = if (isSystemInDarkTheme()) Color(0xFF121212) else Color(0xFFF5F6FA)
+//            ) {
+//                // 🔹 Top User Section
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(16.dp),
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    Box(
+//                        modifier = Modifier
+//                            .size(70.dp)
+//                            .clip(CircleShape)
+//                            .background(Color(0xFF6C63FF)),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Text(
+//                            userEmail.firstOrNull()?.uppercase() ?: "?",
+//                            color = Color.White,
+//                            fontSize = 28.sp
+//                        )
+//                    }
+//                    Spacer(modifier = Modifier.height(8.dp))
+//                    Text(userEmail, fontSize = 14.sp, color = Color.DarkGray)
+//                }
+//
+//                Spacer(Modifier.height(16.dp))
+//
+//                // 🔹 Drawer Items
+//                DrawerItem(Icons.Default.Home, "Home") { onNavigate("home") }
+//                DrawerItem(Icons.Default.UploadFile, "Upload Resume") { onNavigate("upload") }
+//                DrawerItem(Icons.Default.BarChart, "ATS Score") { onNavigate("ats") }
+//                DrawerItem(Icons.Default.TipsAndUpdates, "Suggestions") { onNavigate("suggestions") }
+//                DrawerItem(Icons.Default.History, "History") { onNavigate("history") }
+//
+//                Spacer(modifier = Modifier.weight(1f))
+//
+//                Divider()
+//
+//                // 🔹 Bottom: Settings + Logout
+////                DrawerItem(Icons.Default.Settings, "Settings") { onNavigate("settings") }
+//                DrawerItem(Icons.Default.Settings, "Settings") {
+//                    scope.launch { drawerState.close() }
+//                    navController.navigate("settings")
+//                }
+//
+//
+//                DrawerItem(Icons.Default.Logout, "Logout") {
+//                    scope.launch {
+//                        UserPreference.clearUser(context)
+//                    }
+//                    navController.navigate("login") {
+//                        popUpTo("studentMain/$userEmail") { inclusive = true }
+//                    }
+//                }
+//
+//            }
+//        }
+//    ) {
+//        Scaffold(
+//            topBar = {
+//                TopAppBar(
+//                    title = { Text("Resume Analyser") },
+//                    navigationIcon = {
+//                        IconButton(onClick = {
+//                            scope.launch { drawerState.open() }
+//                        }) {
+//                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+//                        }
+//                    }
+//                )
+//            }
+//        ) { innerPadding ->
+//            HomeDashboardContent(
+//                userEmail = userEmail,
+//                modifier = Modifier.padding(innerPadding),
+//                onNavigate = onNavigate
+//            )
+//        }
+//    }
+//}
+//
+//@Composable
+//fun DrawerItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, onClick: () -> Unit) {
+//    NavigationDrawerItem(
+////        label = { Text(text, fontSize = 16.sp) },
+////        selected = false,
+////        onClick = onClick,
+////        icon = { Icon(icon, contentDescription = text) },
+////        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+//        label = { Text(text, fontSize = 16.sp, color = if (isSystemInDarkTheme()) Color.White else Color.Black) },
+//        selected = false,
+//        onClick = onClick,
+//        icon = { Icon(icon, contentDescription = text, tint = if (isSystemInDarkTheme()) Color.White else Color.Black) },
+//        colors = NavigationDrawerItemDefaults.colors(
+//            unselectedContainerColor = Color.Transparent, // ensures drawerColor is visible
+//            selectedContainerColor = Color.Gray.copy(alpha = 0.2f)
+//        ),
+//        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+//    )
+//}
+//@Composable
+//fun HomeDashboardContent(userEmail: String, modifier: Modifier = Modifier, onNavigate: (String) -> Unit) {
+//
+//    Column(
+//        modifier = modifier
+//            .fillMaxSize()
+//            .background(
+//                Brush.verticalGradient(
+////                    listOf(Color(0xFF6C63FF), Color(0xFFB388FF))
+////                    listOf(
+////                        Color(0xFF6C63FF), // deep violet
+////                        Color(0xFF8E54E9), // bright purple
+////                        Color(0xFFB388FF)  // lavender
+////                    )
+//                     listOf(
+//                        Color(0xFF89CFF0), // baby blue
+//                        Color(0xFFB39DDB), // soft purple
+//                        Color(0xFFE1BEE7)  // pale pinkish-lavender
+//                    )
+//
+//                )
+//            )
+//            .padding(16.dp)
+//    ) {
+//        // 🔹 Welcome
+//        Text(
+//            text = "Welcome back, ${userEmail.substringBefore('@')} 👋",
+//            color = Color.White,
+//            fontWeight = FontWeight.Bold,
+//            fontSize = 22.sp
+//        )
+//        Spacer(Modifier.height(16.dp))
+//
+//        // 🔹 Quick Actions
+//        Text("Quick Actions", color = Color.White, fontSize = 18.sp)
+//        Spacer(Modifier.height(8.dp))
+//        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+//            QuickActionCard("Upload Resume", Icons.Default.UploadFile) { onNavigate("upload") }
+//            QuickActionCard("ATS Score", Icons.Default.BarChart) { onNavigate("ats") }
+//            QuickActionCard("Suggestions", Icons.Default.TipsAndUpdates) { onNavigate("suggestions") }
+//        }
+//
+//        Spacer(Modifier.height(24.dp))
+//
+//        // 🔹 Stats Section
+//        Text("Your Stats", color = Color.White, fontSize = 18.sp)
+//        Spacer(Modifier.height(8.dp))
+//        Card(
+//            modifier = Modifier.fillMaxWidth(),
+//            shape = RoundedCornerShape(16.dp),
+//            colors = CardDefaults.cardColors(containerColor = Color.White)
+//        ) {
+//            Column(Modifier.padding(16.dp)) {
+//                // Agar data nahi mila → placeholder text
+//                Text("No stats available yet", color = Color.Gray)
+//            }
+//        }
+//
+//        Spacer(Modifier.height(24.dp))
+//
+//        // 🔹 Recent History
+//        Text("Recent History", color = Color.White, fontSize = 18.sp)
+//        Spacer(Modifier.height(8.dp))
+//        Card(
+//            modifier = Modifier.fillMaxWidth(),
+//            shape = RoundedCornerShape(16.dp),
+//            colors = CardDefaults.cardColors(containerColor = Color.White)
+//        ) {
+//            Column(Modifier.padding(16.dp)) {
+//                // Agar history nahi hai → placeholder
+//                Text("No resumes analyzed yet", color = Color.Gray)
+//            }
+//        }
+//    }
+//}
+//
+//@Composable
+//fun QuickActionCard(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+//    Card(
+//        modifier = Modifier
+//            .size(100.dp)
+//            .padding(4.dp),
+//        shape = RoundedCornerShape(16.dp),
+//        onClick = onClick,
+//        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f))
+//    ) {
+//        Column(
+//            modifier = Modifier.fillMaxSize(),
+//            verticalArrangement = Arrangement.Center,
+//            horizontalAlignment = Alignment.CenterHorizontally
+//        ) {
+//            Icon(icon, contentDescription = title, tint = Color(0xFF6C63FF))
+//            Spacer(Modifier.height(4.dp))
+//            Text(title, fontSize = 12.sp)
+//        }
+//    }
+//}
+//
+//
+
+
+
+
 package com.example.feature_student
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -318,22 +776,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import androidx.navigation.NavController
+import com.example.resumeanalyzer.core.navigation.datastore.UserCache
+import com.example.resumeanalyzer.core.navigation.datastore.UserPreference
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentMainScreen(
-    userEmail: String,
     navController: NavController,
     onNavigate: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    val user by UserPreference.getUser(context).collectAsState(initial = UserCache())
+    val userEmail = user.email ?: "Guest" // fallback
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var showLogoutMenu by remember { mutableStateOf(false) }
+
+    // Get the current theme from user preferences
+    val isDark = when (user.theme) {
+        "light" -> false
+        "dark" -> true
+        else -> isSystemInDarkTheme()
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -342,7 +812,8 @@ fun StudentMainScreen(
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(320.dp),
-                drawerContainerColor = Color(0xFFF5F6FA)
+                // Use the theme-aware isDark variable
+                drawerContainerColor = if (isDark) Color(0xFF121212) else Color(0xFFF5F6FA)
             ) {
                 // 🔹 Top User Section
                 Column(
@@ -365,31 +836,40 @@ fun StudentMainScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(userEmail, fontSize = 14.sp, color = Color.DarkGray)
+                    Text(
+                        userEmail,
+                        fontSize = 14.sp,
+                        color = if (isDark) Color.LightGray else Color.DarkGray
+                    )
                 }
 
                 Spacer(Modifier.height(16.dp))
 
-                // 🔹 Drawer Items
-                DrawerItem(Icons.Default.Home, "Home") { onNavigate("home") }
-                DrawerItem(Icons.Default.UploadFile, "Upload Resume") { onNavigate("upload") }
-                DrawerItem(Icons.Default.BarChart, "ATS Score") { onNavigate("ats") }
-                DrawerItem(Icons.Default.TipsAndUpdates, "Suggestions") { onNavigate("suggestions") }
-                DrawerItem(Icons.Default.History, "History") { onNavigate("history") }
+                // 🔹 Drawer Items - Pass isDark to DrawerItem
+                DrawerItem(Icons.Default.Home, "Home", isDark) { onNavigate("home") }
+                DrawerItem(Icons.Default.UploadFile, "Upload Resume", isDark) { onNavigate("upload") }
+                DrawerItem(Icons.Default.BarChart, "ATS Score", isDark) { onNavigate("ats") }
+                DrawerItem(Icons.Default.TipsAndUpdates, "Suggestions", isDark) { onNavigate("suggestions") }
+                DrawerItem(Icons.Default.History, "History", isDark) { onNavigate("history") }
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                Divider()
+                Divider(color = if (isDark) Color.Gray else Color.LightGray)
 
                 // 🔹 Bottom: Settings + Logout
-                DrawerItem(Icons.Default.Settings, "Settings") { onNavigate("settings") }
-
-                DrawerItem(Icons.Default.Logout, "Logout") {
-                    navController.navigate("login") {
-                        popUpTo("studentMain/$userEmail") { inclusive = true }
-                    }
+                DrawerItem(Icons.Default.Settings, "Settings", isDark) {
+                    scope.launch { drawerState.close() }
+                    navController.navigate("settings")
                 }
 
+                DrawerItem(Icons.Default.Logout, "Logout", isDark) {
+                    scope.launch {
+                        UserPreference.clearUser(context)
+                    }
+                    navController.navigate("login") {
+                        popUpTo("studentMain") { inclusive = true }
+                    }
+                }
             }
         }
     ) {
@@ -409,6 +889,7 @@ fun StudentMainScreen(
         ) { innerPadding ->
             HomeDashboardContent(
                 userEmail = userEmail,
+                theme = user.theme, // Pass the theme
                 modifier = Modifier.padding(innerPadding),
                 onNavigate = onNavigate
             )
@@ -417,98 +898,136 @@ fun StudentMainScreen(
 }
 
 @Composable
-fun DrawerItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, onClick: () -> Unit) {
+fun DrawerItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    isDark: Boolean, // Add isDark parameter
+    onClick: () -> Unit
+) {
     NavigationDrawerItem(
-        label = { Text(text, fontSize = 16.sp) },
+        label = {
+            Text(
+                text,
+                fontSize = 16.sp,
+                color = if (isDark) Color.White else Color.Black
+            )
+        },
         selected = false,
         onClick = onClick,
-        icon = { Icon(icon, contentDescription = text) },
+        icon = {
+            Icon(
+                icon,
+                contentDescription = text,
+                tint = if (isDark) Color.White else Color.Black
+            )
+        },
+        colors = NavigationDrawerItemDefaults.colors(
+            unselectedContainerColor = Color.Transparent,
+            selectedContainerColor = Color.Gray.copy(alpha = 0.2f)
+        ),
         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
     )
 }
 
 @Composable
-fun HomeDashboardContent(userEmail: String, modifier: Modifier = Modifier, onNavigate: (String) -> Unit) {
+fun HomeDashboardContent(userEmail: String, theme: String = "system",modifier: Modifier = Modifier, onNavigate: (String) -> Unit) {
+    val isDark = when (theme) {
+        "light" -> false
+        "dark" -> true
+        else -> isSystemInDarkTheme()
+    }
+
+    val backgroundBrush = if (!isDark) {
+        Brush.verticalGradient(
+            listOf(Color(0xFF64B5F6), Color(0xFF9575CD), Color(0xFFD1C4E9))
+
+        )
+    } else {
+        Brush.verticalGradient(
+            listOf(Color(0xFF1E1E2F), Color(0xFF3E3E55), Color(0xFF5E5E7A))
+        )
+    }
+
+    val colorScheme = if (isDark) darkColorScheme() else lightColorScheme()
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF6C63FF), Color(0xFFB388FF))
-                )
-            )
+            .background(backgroundBrush)
             .padding(16.dp)
     ) {
-        // 🔹 Welcome
         Text(
             text = "Welcome back, ${userEmail.substringBefore('@')} 👋",
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp
+            fontSize = 28.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = if (!isDark) Color.White else colorScheme.onBackground
         )
-        Spacer(Modifier.height(16.dp))
 
-        // 🔹 Quick Actions
-        Text("Quick Actions", color = Color.White, fontSize = 18.sp)
+
+        Spacer(Modifier.height(16.dp))
+        Text("Quick Actions", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+            color = if (!isDark) Color.White else Color(0xFFF1F1F1)
+        )
+
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            QuickActionCard("Upload Resume", Icons.Default.UploadFile) { onNavigate("upload") }
-            QuickActionCard("ATS Score", Icons.Default.BarChart) { onNavigate("ats") }
-            QuickActionCard("Suggestions", Icons.Default.TipsAndUpdates) { onNavigate("suggestions") }
+            QuickActionCard("Upload Resume", Icons.Default.UploadFile, isDark) { onNavigate("upload") }
+            QuickActionCard("ATS Score", Icons.Default.BarChart, isDark) { onNavigate("ats") }
+            QuickActionCard("Suggestions", Icons.Default.TipsAndUpdates, isDark) { onNavigate("suggestions") }
         }
 
         Spacer(Modifier.height(24.dp))
+        Text("Your Stats", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+            color = if (!isDark) Color.White else Color(0xFFF1F1F1)
+        )
 
-        // 🔹 Stats Section
-        Text("Your Stats", color = Color.White, fontSize = 18.sp)
         Spacer(Modifier.height(8.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = if (!isDark) Color.White else colorScheme.surfaceVariant)
         ) {
             Column(Modifier.padding(16.dp)) {
-                // Agar data nahi mila → placeholder text
-                Text("No stats available yet", color = Color.Gray)
+                Text("No stats available yet", color = if (!isDark) Color.Gray else colorScheme.onSurfaceVariant)
             }
         }
 
         Spacer(Modifier.height(24.dp))
+        Text("Recent History", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+            color = if (!isDark) Color.White else Color(0xFFF1F1F1)
+        )
 
-        // 🔹 Recent History
-        Text("Recent History", color = Color.White, fontSize = 18.sp)
         Spacer(Modifier.height(8.dp))
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = if (!isDark) Color.White else colorScheme.surfaceVariant)
         ) {
             Column(Modifier.padding(16.dp)) {
-                // Agar history nahi hai → placeholder
-                Text("No resumes analyzed yet", color = Color.Gray)
+                Text("No resumes analyzed yet", color = if (!isDark) Color.Gray else colorScheme.onSurfaceVariant)
             }
         }
     }
 }
 
 @Composable
-fun QuickActionCard(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+fun QuickActionCard(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, isDark: Boolean, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .size(100.dp)
             .padding(4.dp),
         shape = RoundedCornerShape(16.dp),
         onClick = onClick,
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f))
+        colors = CardDefaults.cardColors(containerColor = if (!isDark) Color.White.copy(alpha = 0.9f) else MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(icon, contentDescription = title, tint = Color(0xFF6C63FF))
+            Icon(icon, contentDescription = title, tint = if (!isDark) Color(0xFF6C63FF) else MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(4.dp))
-            Text(title, fontSize = 12.sp)
+            Text(title, fontSize = 12.sp, color = if (!isDark) Color.Black else MaterialTheme.colorScheme.onSurface)
         }
     }
 }
