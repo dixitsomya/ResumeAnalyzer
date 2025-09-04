@@ -797,6 +797,8 @@ fun StudentMainScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var showLogoutMenu by remember { mutableStateOf(false) }
+    var selectedScreen by remember { mutableStateOf("home") }
+
 
     // Get the current theme from user preferences
     val isDark = when (user.theme) {
@@ -846,23 +848,38 @@ fun StudentMainScreen(
                 Spacer(Modifier.height(16.dp))
 
                 // 🔹 Drawer Items - Pass isDark to DrawerItem
-                DrawerItem(Icons.Default.Home, "Home", isDark) { onNavigate("home") }
-                DrawerItem(Icons.Default.UploadFile, "Upload Resume", isDark) { onNavigate("upload") }
-                DrawerItem(Icons.Default.BarChart, "ATS Score", isDark) { onNavigate("ats") }
-                DrawerItem(Icons.Default.TipsAndUpdates, "Suggestions", isDark) { onNavigate("suggestions") }
-                DrawerItem(Icons.Default.History, "History", isDark) { onNavigate("history") }
+                DrawerItem(Icons.Default.Home, "Home", isDark,isSelected = selectedScreen == "home") {
+                    scope.launch { drawerState.close() }
+                    selectedScreen = "home"
+                }
+                DrawerItem(Icons.Default.UploadFile, "Upload Resume", isDark,isSelected = selectedScreen == "upload") {
+                    scope.launch { drawerState.close() }
+                    selectedScreen = "upload"
+                }
+                DrawerItem(Icons.Default.BarChart, "ATS Score", isDark,isSelected = selectedScreen == "ats") {
+                    scope.launch { drawerState.close() }
+                    selectedScreen = "ats"
+                }
+                DrawerItem(Icons.Default.TipsAndUpdates, "Suggestions", isDark,isSelected = selectedScreen == "suggestions") {
+                    scope.launch { drawerState.close() }
+                    selectedScreen = "suggestions"
+                }
+                DrawerItem(Icons.Default.History, "History", isDark,isSelected = selectedScreen == "history") {
+                    scope.launch { drawerState.close() }
+                    selectedScreen = "history"
+                }
 
                 Spacer(modifier = Modifier.weight(1f))
 
                 Divider(color = if (isDark) Color.Gray else Color.LightGray)
 
                 // 🔹 Bottom: Settings + Logout
-                DrawerItem(Icons.Default.Settings, "Settings", isDark) {
+                DrawerItem(Icons.Default.Settings, "Settings", isDark,isSelected = false) {
                     scope.launch { drawerState.close() }
                     navController.navigate("settings")
                 }
 
-                DrawerItem(Icons.Default.Logout, "Logout", isDark) {
+                DrawerItem(Icons.Default.Logout, "Logout", isDark,isSelected = false) {
                     scope.launch {
                         UserPreference.clearUser(context)
                     }
@@ -876,7 +893,10 @@ fun StudentMainScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Resume Analyser") },
+                    //title = { Text("Resume Analyser") },
+                    title = {
+                        Text(getScreenTitle(selectedScreen))
+                    },
                     navigationIcon = {
                         IconButton(onClick = {
                             scope.launch { drawerState.open() }
@@ -887,12 +907,42 @@ fun StudentMainScreen(
                 )
             }
         ) { innerPadding ->
-            HomeDashboardContent(
-                userEmail = userEmail,
-                theme = user.theme, // Pass the theme
-                modifier = Modifier.padding(innerPadding),
-                onNavigate = onNavigate
-            )
+            when (selectedScreen) {
+                "home" -> HomeDashboardContent(
+                    userEmail = userEmail,
+                    theme = user.theme,
+                    modifier = Modifier.padding(innerPadding),
+                    onNavigate = { screen -> selectedScreen = screen }
+                )
+//                "upload" -> Text("Upload Resume Screen Coming Soon", modifier = Modifier.padding(innerPadding))
+//                "ats" -> Text("ATS Score Screen Coming Soon", modifier = Modifier.padding(innerPadding))
+//                "suggestions" -> Text("Suggestions Screen Coming Soon", modifier = Modifier.padding(innerPadding))
+//                "history" -> Text("History Screen Coming Soon", modifier = Modifier.padding(innerPadding))
+                "upload" -> PlaceholderScreen(
+                    title = "Upload Resume",
+                    description = "Upload your resume for analysis",
+                    modifier = Modifier.padding(innerPadding),
+                    isDark = isDark
+                )
+                "ats" -> PlaceholderScreen(
+                    title = "ATS Score",
+                    description = "View your resume's ATS compatibility score",
+                    modifier = Modifier.padding(innerPadding),
+                    isDark = isDark
+                )
+                "suggestions" -> PlaceholderScreen(
+                    title = "Suggestions",
+                    description = "Get personalized suggestions to improve your resume",
+                    modifier = Modifier.padding(innerPadding),
+                    isDark = isDark
+                )
+                "history" -> PlaceholderScreen(
+                    title = "History",
+                    description = "View your past resume analysis history",
+                    modifier = Modifier.padding(innerPadding),
+                    isDark = isDark
+                )
+            }
         }
     }
 }
@@ -902,6 +952,7 @@ fun DrawerItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     text: String,
     isDark: Boolean, // Add isDark parameter
+    isSelected: Boolean = false,
     onClick: () -> Unit
 ) {
     NavigationDrawerItem(
@@ -912,7 +963,7 @@ fun DrawerItem(
                 color = if (isDark) Color.White else Color.Black
             )
         },
-        selected = false,
+        selected = isSelected,
         onClick = onClick,
         icon = {
             Icon(
@@ -923,12 +974,66 @@ fun DrawerItem(
         },
         colors = NavigationDrawerItemDefaults.colors(
             unselectedContainerColor = Color.Transparent,
-            selectedContainerColor = Color.Gray.copy(alpha = 0.2f)
+            selectedContainerColor = if (isDark) Color(0xFF6C63FF).copy(alpha = 0.3f) else Color(0xFF6C63FF).copy(alpha = 0.2f)
         ),
         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
     )
 }
 
+@Composable
+fun PlaceholderScreen(
+    title: String,
+    description: String,
+    modifier: Modifier = Modifier,
+    isDark: Boolean
+) {
+    val colorScheme = if (isDark) darkColorScheme() else lightColorScheme()
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            Icons.Default.Construction,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = colorScheme.primary
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            title,
+            style = MaterialTheme.typography.headlineMedium,
+            color = colorScheme.onBackground
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            description,
+            style = MaterialTheme.typography.bodyLarge,
+            color = colorScheme.onSurfaceVariant,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        Spacer(Modifier.height(24.dp))
+        Text(
+            "Coming Soon...",
+            style = MaterialTheme.typography.bodyMedium,
+            color = colorScheme.primary
+        )
+    }
+}
+
+fun getScreenTitle(screen: String): String {
+    return when (screen) {
+        "home" -> "Resume Analyser"
+        "upload" -> "Upload Resume"
+        "ats" -> "ATS Score"
+        "suggestions" -> "Suggestions"
+        "history" -> "History"
+        else -> "Resume Analyser"
+    }
+}
 @Composable
 fun HomeDashboardContent(userEmail: String, theme: String = "system",modifier: Modifier = Modifier, onNavigate: (String) -> Unit) {
     val isDark = when (theme) {
@@ -971,9 +1076,14 @@ fun HomeDashboardContent(userEmail: String, theme: String = "system",modifier: M
 
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+//            QuickActionCard("Upload Resume", Icons.Default.UploadFile, isDark) { onNavigate("upload") }
+//            QuickActionCard("ATS Score", Icons.Default.BarChart, isDark) { onNavigate("ats") }
+//            QuickActionCard("Suggestions", Icons.Default.TipsAndUpdates, isDark) { onNavigate("suggestions") }
+
             QuickActionCard("Upload Resume", Icons.Default.UploadFile, isDark) { onNavigate("upload") }
             QuickActionCard("ATS Score", Icons.Default.BarChart, isDark) { onNavigate("ats") }
             QuickActionCard("Suggestions", Icons.Default.TipsAndUpdates, isDark) { onNavigate("suggestions") }
+
         }
 
         Spacer(Modifier.height(24.dp))

@@ -1,5 +1,3 @@
-package com.example.resumeanalyzer.ui.theme
-
 
 //@Composable
 //fun ResumeAnalyzerTheme(theme: String = "system", content: @Composable () -> Unit) {
@@ -16,6 +14,7 @@ package com.example.resumeanalyzer.ui.theme
 //        content = content
 //    )
 //}
+package com.example.resumeanalyzer.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 
