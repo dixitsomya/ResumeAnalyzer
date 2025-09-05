@@ -34,6 +34,7 @@ fun StudentMainScreen(
     val context = LocalContext.current
     val user by UserPreference.getUser(context).collectAsState(initial = UserCache())
     val userEmail = user.email ?: "Guest" // fallback
+    val userName = user.name ?: "User"
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var showLogoutMenu by remember { mutableStateOf(false) }
@@ -150,6 +151,7 @@ fun StudentMainScreen(
             when (selectedScreen) {
                 "home" -> HomeDashboardContent(
                     userEmail = userEmail,
+                    userName = userName,
                     theme = user.theme,
                     modifier = Modifier.padding(innerPadding),
                     onNavigate = { screen -> selectedScreen = screen }
@@ -385,6 +387,7 @@ fun getScreenTitle(screen: String): String {
 @Composable
 fun HomeDashboardContent(
     userEmail: String,
+    userName: String,
     theme: String = "system",
     modifier: Modifier = Modifier,
     onNavigate: (String) -> Unit
@@ -458,7 +461,8 @@ fun HomeDashboardContent(
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = userEmail.substringBefore('@'),
+                            //text = userEmail.substringBefore('@'),
+                            text = userName.ifEmpty { userEmail.substringBefore('@') },
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (isDark) Color.White else Color.Black
