@@ -724,43 +724,23 @@ fun SuggestionCard(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (suggestion.isFixed) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = Color(0xFF4CAF50),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            "Marked as Fixed",
-                            fontSize = 12.sp,
-                            color = Color(0xFF4CAF50),
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                } else {
-                    TextButton(
-                        onClick = onToggleFix,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color(0xFF6C63FF)
-                        )
-                    ) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            "Mark as Fixed",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+                TextButton(
+                    onClick = onToggleFix,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = if (suggestion.isFixed) Color(0xFF4CAF50) else Color(0xFF6C63FF)
+                    )
+                ) {
+                    Icon(
+                        if (suggestion.isFixed) Icons.Default.CheckCircle else Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        if (suggestion.isFixed) "Marked as Fixed" else "Mark as Fixed",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         }
