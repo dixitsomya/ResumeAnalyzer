@@ -1,3 +1,4 @@
+//
 //package com.example.feature_student.suggestions
 //
 //import androidx.compose.foundation.background
@@ -32,6 +33,10 @@
 //) {
 //    val suggestions by viewModel.suggestions.collectAsState()
 //    val hasResume by viewModel.hasResume.collectAsState()
+//
+//    LaunchedEffect(Unit) {
+//        viewModel.refresh()
+//    }
 //
 //    val backgroundBrush = if (isDark) {
 //        Brush.verticalGradient(
@@ -106,10 +111,10 @@
 //        modifier = Modifier
 //            .fillMaxSize()
 //            .padding(20.dp),
-//        verticalArrangement = Arrangement.spacedBy(16.dp)
+//        verticalArrangement = Arrangement.spacedBy(16.dp),
+//        contentPadding = PaddingValues(bottom = 20.dp)
 //    ) {
 //        item {
-//            // Header Card
 //            Card(
 //                modifier = Modifier.fillMaxWidth(),
 //                shape = RoundedCornerShape(20.dp),
@@ -163,7 +168,6 @@
 //        }
 //
 //        item {
-//            // Priority Summary
 //            Row(
 //                modifier = Modifier.fillMaxWidth(),
 //                horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -225,7 +229,6 @@
 //                .fillMaxWidth()
 //                .padding(16.dp)
 //        ) {
-//            // Header Row
 //            Row(
 //                modifier = Modifier.fillMaxWidth(),
 //                horizontalArrangement = Arrangement.SpaceBetween,
@@ -257,7 +260,6 @@
 //
 //            Spacer(Modifier.height(12.dp))
 //
-//            // Title
 //            Text(
 //                suggestion.title,
 //                fontSize = 16.sp,
@@ -267,7 +269,6 @@
 //
 //            Spacer(Modifier.height(8.dp))
 //
-//            // Description
 //            Text(
 //                suggestion.description,
 //                fontSize = 14.sp,
@@ -277,7 +278,6 @@
 //
 //            Spacer(Modifier.height(12.dp))
 //
-//            // Action Row
 //            Row(
 //                modifier = Modifier.fillMaxWidth(),
 //                horizontalArrangement = Arrangement.End,
@@ -410,6 +410,7 @@
 //        SuggestionCategory.SKILLS -> Color(0xFFFFD700)
 //    }
 //}
+//
 
 
 package com.example.feature_student.suggestions
@@ -446,6 +447,7 @@ fun SuggestionsScreen(
 ) {
     val suggestions by viewModel.suggestions.collectAsState()
     val hasResume by viewModel.hasResume.collectAsState()
+    val analysisResult by viewModel.analysisResult.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
@@ -471,6 +473,7 @@ fun SuggestionsScreen(
         } else {
             SuggestionsContent(
                 suggestions = suggestions,
+                overallScore = analysisResult?.overallScore ?: 0,
                 isDark = isDark,
                 onToggleFix = { viewModel.toggleSuggestionFixed(it) }
             )
@@ -506,7 +509,7 @@ fun EmptySuggestionsState(isDark: Boolean) {
         Spacer(Modifier.height(12.dp))
 
         Text(
-            "Upload and analyze your resume first\nto get personalized improvement suggestions",
+            "Upload and analyze your resume first\nto get personalized AI-powered suggestions",
             fontSize = 16.sp,
             color = if (isDark) Color.White.copy(0.6f) else Color.Gray,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -517,6 +520,7 @@ fun EmptySuggestionsState(isDark: Boolean) {
 @Composable
 fun SuggestionsContent(
     suggestions: List<Suggestion>,
+    overallScore: Int,
     isDark: Boolean,
     onToggleFix: (String) -> Unit
 ) {
@@ -536,45 +540,69 @@ fun SuggestionsContent(
                 ),
                 elevation = CardDefaults.cardElevation(12.dp)
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(20.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(60.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.radialGradient(
-                                    listOf(Color(0xFFFFD700), Color(0xFFFF8C00))
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Icon(
-                            Icons.Default.TipsAndUpdates,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.radialGradient(
+                                            listOf(Color(0xFFFFD700), Color(0xFFFF8C00))
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.TipsAndUpdates,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
 
-                    Spacer(Modifier.width(16.dp))
+                            Spacer(Modifier.width(16.dp))
 
-                    Column {
-                        Text(
-                            "Improvement Tips",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isDark) Color.White else Color.Black
-                        )
-                        Text(
-                            "${suggestions.size} suggestions found",
-                            fontSize = 14.sp,
-                            color = if (isDark) Color.White.copy(0.6f) else Color.Gray
-                        )
+                            Column {
+                                Text(
+                                    "AI Suggestions",
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isDark) Color.White else Color.Black
+                                )
+                                Text(
+                                    "${suggestions.size} improvements found",
+                                    fontSize = 14.sp,
+                                    color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+                                )
+                            }
+                        }
+
+                        // Score badge
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = getScoreColor(overallScore).copy(alpha = 0.2f),
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Text(
+                                "$overallScore",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = getScoreColor(overallScore)
+                            )
+                        }
                     }
                 }
             }
@@ -824,3 +852,10 @@ fun getCategoryColor(category: SuggestionCategory): Color {
     }
 }
 
+fun getScoreColor(score: Int): Color {
+    return when {
+        score >= 80 -> Color(0xFF4CAF50)
+        score >= 60 -> Color(0xFFFF9800)
+        else -> Color(0xFFF44336)
+    }
+}

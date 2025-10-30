@@ -600,9 +600,7 @@
 //}
 
 
-
-
-
+//
 //package com.example.feature_student
 //
 //import androidx.compose.foundation.background
@@ -629,6 +627,9 @@
 //import com.example.resumeanalyzer.core.navigation.datastore.UserCache
 //import com.example.resumeanalyzer.core.navigation.datastore.UserPreference
 //import com.example.feature_student.upload.UploadResumeScreen
+//import com.example.feature_student.ats.ATSScoreScreen
+//import com.example.feature_student.suggestions.SuggestionsScreen
+//import com.example.feature_student.history.HistoryScreen
 //
 //@OptIn(ExperimentalMaterial3Api::class)
 //@Composable
@@ -645,6 +646,10 @@
 //    var showLogoutMenu by remember { mutableStateOf(false) }
 //    var selectedScreen by remember { mutableStateOf("home") }
 //
+//    // Key to force recomposition when data changes
+//    var refreshKey by remember { mutableStateOf(0) }
+//
+//    // Theme detection
 //    val isDark = when (user.theme) {
 //        "light" -> false
 //        "dark" -> true
@@ -660,6 +665,7 @@
 //                    .width(320.dp),
 //                drawerContainerColor = if (isDark) Color(0xFF121212) else Color(0xFFF5F6FA)
 //            ) {
+//                // Drawer Header - User Profile Section
 //                Column(
 //                    modifier = Modifier
 //                        .fillMaxWidth()
@@ -676,36 +682,68 @@
 //                        Text(
 //                            userEmail.firstOrNull()?.uppercase() ?: "?",
 //                            color = Color.White,
-//                            fontSize = 28.sp
+//                            fontSize = 28.sp,
+//                            fontWeight = FontWeight.Bold
 //                        )
 //                    }
 //                    Spacer(modifier = Modifier.height(8.dp))
 //                    Text(
 //                        userEmail,
 //                        fontSize = 14.sp,
-//                        color = if (isDark) Color.LightGray else Color.DarkGray
+//                        color = if (isDark) Color.LightGray else Color.DarkGray,
+//                        fontWeight = FontWeight.Medium
 //                    )
 //                }
 //
 //                Spacer(Modifier.height(16.dp))
 //
-//                DrawerItem(Icons.Default.Home, "Home", isDark, isSelected = selectedScreen == "home") {
+//                // Navigation Items
+//                DrawerItem(
+//                    icon = Icons.Default.Home,
+//                    text = "Home",
+//                    isDark = isDark,
+//                    isSelected = selectedScreen == "home"
+//                ) {
 //                    scope.launch { drawerState.close() }
 //                    selectedScreen = "home"
 //                }
-//                DrawerItem(Icons.Default.UploadFile, "Upload Resume", isDark, isSelected = selectedScreen == "upload") {
+//
+//                DrawerItem(
+//                    icon = Icons.Default.UploadFile,
+//                    text = "Upload Resume",
+//                    isDark = isDark,
+//                    isSelected = selectedScreen == "upload"
+//                ) {
 //                    scope.launch { drawerState.close() }
 //                    selectedScreen = "upload"
 //                }
-//                DrawerItem(Icons.Default.BarChart, "ATS Score", isDark, isSelected = selectedScreen == "ats") {
+//
+//                DrawerItem(
+//                    icon = Icons.Default.BarChart,
+//                    text = "ATS Score",
+//                    isDark = isDark,
+//                    isSelected = selectedScreen == "ats"
+//                ) {
 //                    scope.launch { drawerState.close() }
 //                    selectedScreen = "ats"
 //                }
-//                DrawerItem(Icons.Default.TipsAndUpdates, "Suggestions", isDark, isSelected = selectedScreen == "suggestions") {
+//
+//                DrawerItem(
+//                    icon = Icons.Default.TipsAndUpdates,
+//                    text = "Suggestions",
+//                    isDark = isDark,
+//                    isSelected = selectedScreen == "suggestions"
+//                ) {
 //                    scope.launch { drawerState.close() }
 //                    selectedScreen = "suggestions"
 //                }
-//                DrawerItem(Icons.Default.History, "History", isDark, isSelected = selectedScreen == "history") {
+//
+//                DrawerItem(
+//                    icon = Icons.Default.History,
+//                    text = "History",
+//                    isDark = isDark,
+//                    isSelected = selectedScreen == "history"
+//                ) {
 //                    scope.launch { drawerState.close() }
 //                    selectedScreen = "history"
 //                }
@@ -714,19 +752,33 @@
 //
 //                Divider(color = if (isDark) Color.Gray else Color.LightGray)
 //
-//                DrawerItem(Icons.Default.Settings, "Settings", isDark, isSelected = false) {
+//                // Bottom Settings & Logout
+//                DrawerItem(
+//                    icon = Icons.Default.Settings,
+//                    text = "Settings",
+//                    isDark = isDark,
+//                    isSelected = false
+//                ) {
 //                    scope.launch { drawerState.close() }
 //                    navController.navigate("settings")
 //                }
 //
-//                DrawerItem(Icons.Default.Logout, "Logout", isDark, isSelected = false) {
+//                DrawerItem(
+//                    icon = Icons.Default.Logout,
+//                    text = "Logout",
+//                    isDark = isDark,
+//                    isSelected = false
+//                ) {
 //                    scope.launch {
 //                        UserPreference.clearUser(context)
+//                        drawerState.close()
 //                    }
 //                    navController.navigate("login") {
 //                        popUpTo("studentMain") { inclusive = true }
 //                    }
 //                }
+//
+//                Spacer(Modifier.height(8.dp))
 //            }
 //        }
 //    ) {
@@ -734,7 +786,10 @@
 //            topBar = {
 //                TopAppBar(
 //                    title = {
-//                        Text(getScreenTitle(selectedScreen))
+//                        Text(
+//                            text = getScreenTitle(selectedScreen),
+//                            fontWeight = FontWeight.Bold
+//                        )
 //                    },
 //                    navigationIcon = {
 //                        IconButton(onClick = {
@@ -742,10 +797,16 @@
 //                        }) {
 //                            Icon(Icons.Default.Menu, contentDescription = "Menu")
 //                        }
-//                    }
+//                    },
+//                    colors = TopAppBarDefaults.topAppBarColors(
+//                        containerColor = if (isDark) Color(0xFF1a1a2e) else MaterialTheme.colorScheme.primaryContainer,
+//                        titleContentColor = if (isDark) Color.White else MaterialTheme.colorScheme.onPrimaryContainer,
+//                        navigationIconContentColor = if (isDark) Color.White else MaterialTheme.colorScheme.onPrimaryContainer
+//                    )
 //                )
 //            }
 //        ) { innerPadding ->
+//            // Screen Content Based on Selection
 //            when (selectedScreen) {
 //                "home" -> HomeDashboardContent(
 //                    userEmail = userEmail,
@@ -754,25 +815,23 @@
 //                    modifier = Modifier.padding(innerPadding),
 //                    onNavigate = { screen -> selectedScreen = screen }
 //                )
+//
 //                "upload" -> UploadResumeScreen(
 //                    modifier = Modifier.padding(innerPadding),
 //                    isDark = isDark
 //                )
-//                "ats" -> PlaceholderScreen(
-//                    title = "ATS Score",
-//                    description = "View your resume's ATS compatibility score",
+//
+//                "ats" -> ATSScoreScreen(
 //                    modifier = Modifier.padding(innerPadding),
 //                    isDark = isDark
 //                )
-//                "suggestions" -> PlaceholderScreen(
-//                    title = "Suggestions",
-//                    description = "Get personalized suggestions to improve your resume",
+//
+//                "suggestions" -> SuggestionsScreen(
 //                    modifier = Modifier.padding(innerPadding),
 //                    isDark = isDark
 //                )
-//                "history" -> PlaceholderScreen(
-//                    title = "History",
-//                    description = "View your past resume analysis history",
+//
+//                "history" -> HistoryScreen(
 //                    modifier = Modifier.padding(innerPadding),
 //                    isDark = isDark
 //                )
@@ -781,6 +840,7 @@
 //    }
 //}
 //
+//// Drawer Item Composable
 //@Composable
 //fun DrawerItem(
 //    icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -794,7 +854,8 @@
 //            Text(
 //                text,
 //                fontSize = 16.sp,
-//                color = if (isDark) Color.White else Color.Black
+//                color = if (isDark) Color.White else Color.Black,
+//                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
 //            )
 //        },
 //        selected = isSelected,
@@ -803,61 +864,26 @@
 //            Icon(
 //                icon,
 //                contentDescription = text,
-//                tint = if (isDark) Color.White else Color.Black
+//                tint = if (isSelected) {
+//                    Color(0xFF6C63FF)
+//                } else {
+//                    if (isDark) Color.White else Color.Black
+//                }
 //            )
 //        },
 //        colors = NavigationDrawerItemDefaults.colors(
 //            unselectedContainerColor = Color.Transparent,
-//            selectedContainerColor = if (isDark) Color(0xFF6C63FF).copy(alpha = 0.3f) else Color(0xFF6C63FF).copy(alpha = 0.2f)
+//            selectedContainerColor = if (isDark) {
+//                Color(0xFF6C63FF).copy(alpha = 0.3f)
+//            } else {
+//                Color(0xFF6C63FF).copy(alpha = 0.2f)
+//            }
 //        ),
 //        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
 //    )
 //}
 //
-//@Composable
-//fun PlaceholderScreen(
-//    title: String,
-//    description: String,
-//    modifier: Modifier = Modifier,
-//    isDark: Boolean
-//) {
-//    val colorScheme = if (isDark) darkColorScheme() else lightColorScheme()
-//
-//    Column(
-//        modifier = modifier
-//            .fillMaxSize()
-//            .padding(24.dp),
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        Icon(
-//            Icons.Default.Construction,
-//            contentDescription = null,
-//            modifier = Modifier.size(64.dp),
-//            tint = colorScheme.primary
-//        )
-//        Spacer(Modifier.height(16.dp))
-//        Text(
-//            title,
-//            style = MaterialTheme.typography.headlineMedium,
-//            color = colorScheme.onBackground
-//        )
-//        Spacer(Modifier.height(8.dp))
-//        Text(
-//            description,
-//            style = MaterialTheme.typography.bodyLarge,
-//            color = colorScheme.onSurfaceVariant,
-//            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-//        )
-//        Spacer(Modifier.height(24.dp))
-//        Text(
-//            "Coming Soon...",
-//            style = MaterialTheme.typography.bodyMedium,
-//            color = colorScheme.primary
-//        )
-//    }
-//}
-//
+//// Get Screen Title Helper Function
 //fun getScreenTitle(screen: String): String {
 //    return when (screen) {
 //        "home" -> "Home"
@@ -869,6 +895,7 @@
 //    }
 //}
 //
+//// Home Dashboard Content with Dynamic Stats
 //@Composable
 //fun HomeDashboardContent(
 //    userEmail: String,
@@ -883,6 +910,17 @@
 //        else -> isSystemInDarkTheme()
 //    }
 //
+//    // Get live stats from database
+//    val totalAnalyzed = remember {
+//        com.example.feature_student.data.LocalResumeDatabase.getTotalAnalyzed()
+//    }
+//    val averageScore = remember {
+//        com.example.feature_student.data.LocalResumeDatabase.getAverageScore()
+//    }
+//    val recentResumes = remember {
+//        com.example.feature_student.data.LocalResumeDatabase.getAnalyzedResumes().take(3)
+//    }
+//
 //    val backgroundBrush = if (!isDark) {
 //        Brush.verticalGradient(
 //            listOf(Color(0xFF667eea), Color(0xFF764ba2))
@@ -893,8 +931,6 @@
 //        )
 //    }
 //
-//    val colorScheme = if (isDark) darkColorScheme() else lightColorScheme()
-//
 //    LazyColumn(
 //        modifier = modifier
 //            .fillMaxSize()
@@ -902,6 +938,7 @@
 //            .padding(20.dp),
 //        verticalArrangement = Arrangement.spacedBy(24.dp)
 //    ) {
+//        // Welcome Card
 //        item {
 //            Card(
 //                modifier = Modifier.fillMaxWidth(),
@@ -954,6 +991,7 @@
 //            }
 //        }
 //
+//        // Quick Actions Section
 //        item {
 //            Text(
 //                "Quick Actions",
@@ -992,6 +1030,7 @@
 //            }
 //        }
 //
+//        // Statistics Cards
 //        item {
 //            Row(
 //                modifier = Modifier.fillMaxWidth(),
@@ -999,7 +1038,7 @@
 //            ) {
 //                StatsCard(
 //                    title = "Resumes Analyzed",
-//                    value = "0",
+//                    value = totalAnalyzed.toString(),
 //                    icon = Icons.Default.Description,
 //                    color = Color(0xFF6C63FF),
 //                    isDark = isDark,
@@ -1008,7 +1047,7 @@
 //
 //                StatsCard(
 //                    title = "Average Score",
-//                    value = "N/A",
+//                    value = if (averageScore > 0) String.format("%.1f", averageScore) else "N/A",
 //                    icon = Icons.Default.Assessment,
 //                    color = Color(0xFFE91E63),
 //                    isDark = isDark,
@@ -1017,6 +1056,7 @@
 //            }
 //        }
 //
+//        // Recent Activity Section
 //        item {
 //            Card(
 //                modifier = Modifier.fillMaxWidth(),
@@ -1051,32 +1091,42 @@
 //
 //                    Spacer(Modifier.height(16.dp))
 //
-//                    Box(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(120.dp),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Column(
-//                            horizontalAlignment = Alignment.CenterHorizontally
+//                    if (recentResumes.isEmpty()) {
+//                        // Empty State
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(120.dp),
+//                            contentAlignment = Alignment.Center
 //                        ) {
-//                            Icon(
-//                                Icons.Default.CloudOff,
-//                                contentDescription = null,
-//                                modifier = Modifier.size(48.dp),
-//                                tint = if (isDark) Color.White.copy(0.4f) else Color.Gray
-//                            )
-//                            Spacer(Modifier.height(8.dp))
-//                            Text(
-//                                "No activity yet",
-//                                color = if (isDark) Color.White.copy(0.6f) else Color.Gray,
-//                                fontSize = 16.sp
-//                            )
-//                            Text(
-//                                "Upload a resume to get started",
-//                                color = if (isDark) Color.White.copy(0.4f) else Color.Gray.copy(0.7f),
-//                                fontSize = 14.sp
-//                            )
+//                            Column(
+//                                horizontalAlignment = Alignment.CenterHorizontally
+//                            ) {
+//                                Icon(
+//                                    Icons.Default.CloudOff,
+//                                    contentDescription = null,
+//                                    modifier = Modifier.size(48.dp),
+//                                    tint = if (isDark) Color.White.copy(0.4f) else Color.Gray
+//                                )
+//                                Spacer(Modifier.height(8.dp))
+//                                Text(
+//                                    "No activity yet",
+//                                    color = if (isDark) Color.White.copy(0.6f) else Color.Gray,
+//                                    fontSize = 16.sp
+//                                )
+//                                Text(
+//                                    "Upload a resume to get started",
+//                                    color = if (isDark) Color.White.copy(0.4f) else Color.Gray.copy(0.7f),
+//                                    fontSize = 14.sp
+//                                )
+//                            }
+//                        }
+//                    } else {
+//                        // Recent Items List
+//                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+//                            recentResumes.forEach { resume ->
+//                                RecentActivityItem(resume, isDark)
+//                            }
 //                        }
 //                    }
 //                }
@@ -1085,6 +1135,57 @@
 //    }
 //}
 //
+//// Recent Activity Item
+//@Composable
+//fun RecentActivityItem(
+//    resume: com.example.feature_student.model.Resume,
+//    isDark: Boolean
+//) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .clip(RoundedCornerShape(12.dp))
+//            .background(if (isDark) Color.White.copy(0.05f) else Color.Black.copy(0.03f))
+//            .padding(12.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        Icon(
+//            Icons.Default.Description,
+//            contentDescription = null,
+//            tint = Color(0xFF6C63FF),
+//            modifier = Modifier.size(24.dp)
+//        )
+//        Spacer(Modifier.width(12.dp))
+//        Column(modifier = Modifier.weight(1f)) {
+//            Text(
+//                resume.fileName,
+//                fontSize = 14.sp,
+//                fontWeight = FontWeight.Medium,
+//                color = if (isDark) Color.White else Color.Black,
+//                maxLines = 1
+//            )
+//            Text(
+//                formatDate(resume.uploadedDate),
+//                fontSize = 12.sp,
+//                color = if (isDark) Color.White.copy(0.5f) else Color.Gray
+//            )
+//        }
+//        Surface(
+//            shape = RoundedCornerShape(8.dp),
+//            color = getScoreColor(resume.atsScore ?: 0).copy(alpha = 0.2f)
+//        ) {
+//            Text(
+//                "${resume.atsScore}",
+//                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+//                fontSize = 14.sp,
+//                fontWeight = FontWeight.Bold,
+//                color = getScoreColor(resume.atsScore ?: 0)
+//            )
+//        }
+//    }
+//}
+//
+//// Enhanced Quick Action Card
 //@Composable
 //fun EnhancedQuickActionCard(
 //    title: String,
@@ -1130,6 +1231,7 @@
 //    }
 //}
 //
+//// Stats Card
 //@Composable
 //fun StatsCard(
 //    title: String,
@@ -1183,7 +1285,22 @@
 //        }
 //    }
 //}
-
+//
+//// Helper Functions
+//fun formatDate(timestamp: Long): String {
+//    val sdf = java.text.SimpleDateFormat("MMM dd", java.util.Locale.getDefault())
+//    return sdf.format(java.util.Date(timestamp))
+//}
+//
+//fun getScoreColor(score: Int): Color {
+//    return when {
+//        score >= 80 -> Color(0xFF4CAF50)
+//        score >= 60 -> Color(0xFFFF9800)
+//        else -> Color(0xFFF44336)
+//    }
+//}
+//
+//
 
 
 package com.example.feature_student
@@ -1228,13 +1345,9 @@ fun StudentMainScreen(
     val userName = user.name ?: "User"
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    var showLogoutMenu by remember { mutableStateOf(false) }
     var selectedScreen by remember { mutableStateOf("home") }
-
-    // Key to force recomposition when data changes
     var refreshKey by remember { mutableStateOf(0) }
 
-    // Theme detection
     val isDark = when (user.theme) {
         "light" -> false
         "dark" -> true
@@ -1250,7 +1363,6 @@ fun StudentMainScreen(
                     .width(320.dp),
                 drawerContainerColor = if (isDark) Color(0xFF121212) else Color(0xFFF5F6FA)
             ) {
-                // Drawer Header - User Profile Section
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1282,7 +1394,6 @@ fun StudentMainScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // Navigation Items
                 DrawerItem(
                     icon = Icons.Default.Home,
                     text = "Home",
@@ -1290,6 +1401,7 @@ fun StudentMainScreen(
                     isSelected = selectedScreen == "home"
                 ) {
                     scope.launch { drawerState.close() }
+                    refreshKey++
                     selectedScreen = "home"
                 }
 
@@ -1310,6 +1422,7 @@ fun StudentMainScreen(
                     isSelected = selectedScreen == "ats"
                 ) {
                     scope.launch { drawerState.close() }
+                    refreshKey++
                     selectedScreen = "ats"
                 }
 
@@ -1320,6 +1433,7 @@ fun StudentMainScreen(
                     isSelected = selectedScreen == "suggestions"
                 ) {
                     scope.launch { drawerState.close() }
+                    refreshKey++
                     selectedScreen = "suggestions"
                 }
 
@@ -1330,6 +1444,7 @@ fun StudentMainScreen(
                     isSelected = selectedScreen == "history"
                 ) {
                     scope.launch { drawerState.close() }
+                    refreshKey++
                     selectedScreen = "history"
                 }
 
@@ -1337,7 +1452,6 @@ fun StudentMainScreen(
 
                 Divider(color = if (isDark) Color.Gray else Color.LightGray)
 
-                // Bottom Settings & Logout
                 DrawerItem(
                     icon = Icons.Default.Settings,
                     text = "Settings",
@@ -1391,19 +1505,30 @@ fun StudentMainScreen(
                 )
             }
         ) { innerPadding ->
-            // Screen Content Based on Selection
             when (selectedScreen) {
                 "home" -> HomeDashboardContent(
                     userEmail = userEmail,
                     userName = userName,
                     theme = user.theme,
                     modifier = Modifier.padding(innerPadding),
-                    onNavigate = { screen -> selectedScreen = screen }
+                    onNavigate = { screen ->
+                        selectedScreen = screen
+                        refreshKey++
+                    },
+                    refreshKey = refreshKey
                 )
 
                 "upload" -> UploadResumeScreen(
                     modifier = Modifier.padding(innerPadding),
-                    isDark = isDark
+                    isDark = isDark,
+                    onNavigateToHome = {
+                        refreshKey++
+                        selectedScreen = "home"
+                    },
+                    onNavigateToSuggestions = {
+                        refreshKey++
+                        selectedScreen = "suggestions"
+                    }
                 )
 
                 "ats" -> ATSScoreScreen(
@@ -1418,14 +1543,21 @@ fun StudentMainScreen(
 
                 "history" -> HistoryScreen(
                     modifier = Modifier.padding(innerPadding),
-                    isDark = isDark
+                    isDark = isDark,
+                    onNavigateToSuggestions = {
+                        refreshKey++
+                        selectedScreen = "suggestions"
+                    },
+                    onNavigateToATS = {
+                        refreshKey++
+                        selectedScreen = "ats"
+                    }
                 )
             }
         }
     }
 }
 
-// Drawer Item Composable
 @Composable
 fun DrawerItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -1468,7 +1600,6 @@ fun DrawerItem(
     )
 }
 
-// Get Screen Title Helper Function
 fun getScreenTitle(screen: String): String {
     return when (screen) {
         "home" -> "Home"
@@ -1480,14 +1611,14 @@ fun getScreenTitle(screen: String): String {
     }
 }
 
-// Home Dashboard Content with Dynamic Stats
 @Composable
 fun HomeDashboardContent(
     userEmail: String,
     userName: String,
     theme: String = "system",
     modifier: Modifier = Modifier,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    refreshKey: Int = 0
 ) {
     val isDark = when (theme) {
         "light" -> false
@@ -1495,14 +1626,13 @@ fun HomeDashboardContent(
         else -> isSystemInDarkTheme()
     }
 
-    // Get live stats from database
-    val totalAnalyzed = remember {
+    val totalAnalyzed = remember(refreshKey) {
         com.example.feature_student.data.LocalResumeDatabase.getTotalAnalyzed()
     }
-    val averageScore = remember {
+    val averageScore = remember(refreshKey) {
         com.example.feature_student.data.LocalResumeDatabase.getAverageScore()
     }
-    val recentResumes = remember {
+    val recentResumes = remember(refreshKey) {
         com.example.feature_student.data.LocalResumeDatabase.getAnalyzedResumes().take(3)
     }
 
@@ -1523,7 +1653,6 @@ fun HomeDashboardContent(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // Welcome Card
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -1576,7 +1705,6 @@ fun HomeDashboardContent(
             }
         }
 
-        // Quick Actions Section
         item {
             Text(
                 "Quick Actions",
@@ -1615,7 +1743,6 @@ fun HomeDashboardContent(
             }
         }
 
-        // Statistics Cards
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1641,7 +1768,6 @@ fun HomeDashboardContent(
             }
         }
 
-        // Recent Activity Section
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -1677,7 +1803,6 @@ fun HomeDashboardContent(
                     Spacer(Modifier.height(16.dp))
 
                     if (recentResumes.isEmpty()) {
-                        // Empty State
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1707,7 +1832,6 @@ fun HomeDashboardContent(
                             }
                         }
                     } else {
-                        // Recent Items List
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             recentResumes.forEach { resume ->
                                 RecentActivityItem(resume, isDark)
@@ -1720,7 +1844,6 @@ fun HomeDashboardContent(
     }
 }
 
-// Recent Activity Item
 @Composable
 fun RecentActivityItem(
     resume: com.example.feature_student.model.Resume,
@@ -1770,7 +1893,6 @@ fun RecentActivityItem(
     }
 }
 
-// Enhanced Quick Action Card
 @Composable
 fun EnhancedQuickActionCard(
     title: String,
@@ -1816,7 +1938,6 @@ fun EnhancedQuickActionCard(
     }
 }
 
-// Stats Card
 @Composable
 fun StatsCard(
     title: String,
@@ -1840,18 +1961,12 @@ fun StatsCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(24.dp)
+            )
 
             Column {
                 Text(
@@ -1871,7 +1986,6 @@ fun StatsCard(
     }
 }
 
-// Helper Functions
 fun formatDate(timestamp: Long): String {
     val sdf = java.text.SimpleDateFormat("MMM dd", java.util.Locale.getDefault())
     return sdf.format(java.util.Date(timestamp))
@@ -1884,5 +1998,3 @@ fun getScoreColor(score: Int): Color {
         else -> Color(0xFFF44336)
     }
 }
-
-

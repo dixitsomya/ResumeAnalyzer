@@ -5,6 +5,7 @@
 //import androidx.compose.foundation.background
 //import androidx.compose.foundation.layout.*
 //import androidx.compose.foundation.lazy.LazyColumn
+//import androidx.compose.foundation.lazy.items
 //import androidx.compose.foundation.shape.CircleShape
 //import androidx.compose.foundation.shape.RoundedCornerShape
 //import androidx.compose.material.icons.Icons
@@ -23,6 +24,8 @@
 //import androidx.compose.ui.unit.sp
 //import androidx.lifecycle.viewmodel.compose.viewModel
 //import com.example.feature_student.model.Resume
+//import java.text.SimpleDateFormat
+//import java.util.*
 //
 //@Composable
 //fun ATSScoreScreen(
@@ -33,7 +36,6 @@
 //    val latestResume by viewModel.latestResume.collectAsState()
 //    val analyzedCount by viewModel.analyzedCount.collectAsState()
 //
-//    // Refresh data when screen is displayed
 //    LaunchedEffect(Unit) {
 //        viewModel.refresh()
 //    }
@@ -111,10 +113,10 @@
 //        modifier = Modifier
 //            .fillMaxSize()
 //            .padding(20.dp),
-//        verticalArrangement = Arrangement.spacedBy(20.dp)
+//        verticalArrangement = Arrangement.spacedBy(20.dp),
+//        contentPadding = PaddingValues(bottom = 20.dp)
 //    ) {
 //        item {
-//            // Main Score Card
 //            Card(
 //                modifier = Modifier.fillMaxWidth(),
 //                shape = RoundedCornerShape(24.dp),
@@ -138,7 +140,6 @@
 //
 //                    Spacer(Modifier.height(24.dp))
 //
-//                    // Animated Circular Progress
 //                    AnimatedCircularProgress(
 //                        score = resume.atsScore ?: 0,
 //                        isDark = isDark
@@ -158,7 +159,6 @@
 //        }
 //
 //        item {
-//            // Score Breakdown Card
 //            Card(
 //                modifier = Modifier.fillMaxWidth(),
 //                shape = RoundedCornerShape(20.dp),
@@ -206,7 +206,6 @@
 //        }
 //
 //        item {
-//            // Stats Row
 //            Row(
 //                modifier = Modifier.fillMaxWidth(),
 //                horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -232,7 +231,6 @@
 //        }
 //
 //        item {
-//            // Resume Info Card
 //            Card(
 //                modifier = Modifier.fillMaxWidth(),
 //                shape = RoundedCornerShape(20.dp),
@@ -309,13 +307,11 @@
 //        contentAlignment = Alignment.Center
 //    ) {
 //        Canvas(modifier = Modifier.size(200.dp)) {
-//            // Background circle
 //            drawCircle(
 //                color = if (isDark) Color.White.copy(0.1f) else Color.LightGray.copy(0.3f),
 //                style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round)
 //            )
 //
-//            // Progress arc
 //            drawArc(
 //                brush = Brush.sweepGradient(
 //                    listOf(
@@ -452,9 +448,12 @@
 //}
 //
 //fun formatDate(timestamp: Long): String {
-//    val sdf = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
-//    return sdf.format(java.util.Date(timestamp))
+//    val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+//    return sdf.format(Date(timestamp))
 //}
+//
+//
+
 
 
 package com.example.feature_student.ats
@@ -464,8 +463,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -482,9 +479,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.feature_student.model.Resume
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun ATSScoreScreen(
@@ -493,6 +487,7 @@ fun ATSScoreScreen(
     viewModel: ATSViewModel = viewModel()
 ) {
     val latestResume by viewModel.latestResume.collectAsState()
+    val analysisResult by viewModel.analysisResult.collectAsState()
     val analyzedCount by viewModel.analyzedCount.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -514,11 +509,12 @@ fun ATSScoreScreen(
             .fillMaxSize()
             .background(backgroundBrush)
     ) {
-        if (latestResume == null) {
+        if (latestResume == null || analysisResult == null) {
             EmptyATSState(isDark = isDark)
         } else {
             ATSScoreContent(
                 resume = latestResume!!,
+                analysis = analysisResult!!,
                 analyzedCount = analyzedCount,
                 isDark = isDark
             )
@@ -564,7 +560,8 @@ fun EmptyATSState(isDark: Boolean) {
 
 @Composable
 fun ATSScoreContent(
-    resume: Resume,
+    resume: com.example.feature_student.model.Resume,
+    analysis: com.example.feature_student.model.ATSAnalysisResult,
     analyzedCount: Int,
     isDark: Boolean
 ) {
@@ -600,18 +597,19 @@ fun ATSScoreContent(
                     Spacer(Modifier.height(24.dp))
 
                     AnimatedCircularProgress(
-                        score = resume.atsScore ?: 0,
+                        score = analysis.overallScore,
                         isDark = isDark
                     )
 
                     Spacer(Modifier.height(24.dp))
 
-                    val (message, emoji) = getScoreMessage(resume.atsScore ?: 0)
+                    val (message, emoji) = getScoreMessage(analysis.overallScore)
                     Text(
                         "$message $emoji",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
-                        color = if (isDark) Color.White.copy(0.8f) else Color(0xFF1a1a2e)
+                        color = if (isDark) Color.White.copy(0.8f) else Color(0xFF1a1a2e),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
             }
@@ -642,24 +640,102 @@ fun ATSScoreContent(
 
                     ScoreBreakdownItem(
                         "Format Compatibility",
-                        getRandomScore(resume.atsScore ?: 0, 5),
+                        analysis.breakdown.formatScore,
                         isDark
                     )
                     ScoreBreakdownItem(
                         "Keyword Optimization",
-                        getRandomScore(resume.atsScore ?: 0, 10),
+                        analysis.breakdown.keywordScore,
                         isDark
                     )
                     ScoreBreakdownItem(
                         "Content Quality",
-                        getRandomScore(resume.atsScore ?: 0, 8),
+                        analysis.breakdown.contentScore,
                         isDark
                     )
                     ScoreBreakdownItem(
                         "Structure & Organization",
-                        getRandomScore(resume.atsScore ?: 0, 7),
+                        analysis.breakdown.structureScore,
                         isDark
                     )
+                    ScoreBreakdownItem(
+                        "Contact Information",
+                        analysis.breakdown.contactScore,
+                        isDark
+                    )
+                }
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isDark) Color(0xFF2a2a3e) else Color.White
+                ),
+                elevation = CardDefaults.cardElevation(8.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Key,
+                            contentDescription = null,
+                            tint = Color(0xFF6C63FF),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Keyword Analysis",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDark) Color.White else Color.Black
+                        )
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    Text(
+                        "Found Keywords (${analysis.keywords.foundKeywords.size})",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4CAF50)
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Text(
+                        analysis.keywords.foundKeywords.take(15).joinToString(", "),
+                        fontSize = 13.sp,
+                        color = if (isDark) Color.White.copy(0.7f) else Color.Gray,
+                        lineHeight = 18.sp
+                    )
+
+                    if (analysis.keywords.missingKeywords.isNotEmpty()) {
+                        Spacer(Modifier.height(16.dp))
+
+                        Text(
+                            "Suggested Keywords",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFF9800)
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Text(
+                            analysis.keywords.missingKeywords.take(10).joinToString(", "),
+                            fontSize = 13.sp,
+                            color = if (isDark) Color.White.copy(0.7f) else Color.Gray,
+                            lineHeight = 18.sp
+                        )
+                    }
                 }
             }
         }
@@ -679,8 +755,8 @@ fun ATSScoreContent(
                 )
 
                 ATSStatCard(
-                    title = "Latest Score",
-                    value = "${resume.atsScore ?: 0}",
+                    title = "Current Score",
+                    value = "${analysis.overallScore}",
                     icon = Icons.Default.TrendingUp,
                     color = Color(0xFFE91E63),
                     isDark = isDark,
@@ -902,13 +978,7 @@ fun getScoreMessage(score: Int): Pair<String, String> {
     }
 }
 
-fun getRandomScore(baseScore: Int, variance: Int): Int {
-    return (baseScore - variance..baseScore + variance).random().coerceIn(0, 100)
-}
-
 fun formatDate(timestamp: Long): String {
-    val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-    return sdf.format(Date(timestamp))
+    val sdf = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
+    return sdf.format(java.util.Date(timestamp))
 }
-
-

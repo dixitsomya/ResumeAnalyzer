@@ -1,6 +1,8 @@
+//
 //package com.example.feature_student.history
 //
 //import androidx.compose.foundation.background
+//import androidx.compose.foundation.clickable
 //import androidx.compose.foundation.layout.*
 //import androidx.compose.foundation.lazy.LazyColumn
 //import androidx.compose.foundation.lazy.items
@@ -21,6 +23,7 @@
 //import androidx.compose.ui.unit.sp
 //import androidx.lifecycle.viewmodel.compose.viewModel
 //import com.example.feature_student.model.Resume
+//import com.example.feature_student.data.LocalResumeDatabase
 //import java.text.SimpleDateFormat
 //import java.util.*
 //
@@ -28,10 +31,16 @@
 //fun HistoryScreen(
 //    modifier: Modifier = Modifier,
 //    isDark: Boolean,
-//    viewModel: HistoryViewModel = viewModel()
+//    viewModel: HistoryViewModel = viewModel(),
+//    onNavigateToSuggestions: () -> Unit = {},
+//    onNavigateToATS: (Resume) -> Unit = {}
 //) {
 //    val resumes by viewModel.resumes.collectAsState()
 //    val averageScore by viewModel.averageScore.collectAsState()
+//
+//    LaunchedEffect(Unit) {
+//        viewModel.refresh()
+//    }
 //
 //    val backgroundBrush = if (isDark) {
 //        Brush.verticalGradient(
@@ -54,7 +63,16 @@
 //            HistoryContent(
 //                resumes = resumes,
 //                averageScore = averageScore,
-//                isDark = isDark
+//                isDark = isDark,
+//                onResumeClick = { resume ->
+//                    // Set latest resume in database and navigate to suggestions
+//                    LocalResumeDatabase.updateResume(resume)
+//                    onNavigateToSuggestions()
+//                },
+//                onATSClick = { resume ->
+//                    LocalResumeDatabase.updateResume(resume)
+//                    onNavigateToATS(resume)
+//                }
 //            )
 //        }
 //    }
@@ -100,16 +118,18 @@
 //fun HistoryContent(
 //    resumes: List<Resume>,
 //    averageScore: Double,
-//    isDark: Boolean
+//    isDark: Boolean,
+//    onResumeClick: (Resume) -> Unit,
+//    onATSClick: (Resume) -> Unit
 //) {
 //    LazyColumn(
 //        modifier = Modifier
 //            .fillMaxSize()
 //            .padding(20.dp),
-//        verticalArrangement = Arrangement.spacedBy(16.dp)
+//        verticalArrangement = Arrangement.spacedBy(16.dp),
+//        contentPadding = PaddingValues(bottom = 20.dp)
 //    ) {
 //        item {
-//            // Summary Card
 //            Card(
 //                modifier = Modifier.fillMaxWidth(),
 //                shape = RoundedCornerShape(20.dp),
@@ -182,7 +202,7 @@
 //
 //                        StatItem(
 //                            label = "Avg Score",
-//                            value = String.format("%.1f", averageScore),
+//                            value = if (averageScore > 0) String.format("%.1f", averageScore) else "N/A",
 //                            icon = Icons.Default.Star,
 //                            color = Color(0xFFFFD700),
 //                            isDark = isDark
@@ -211,7 +231,12 @@
 //        }
 //
 //        items(resumes) { resume ->
-//            ResumeHistoryCard(resume = resume, isDark = isDark)
+//            ResumeHistoryCard(
+//                resume = resume,
+//                isDark = isDark,
+//                onResumeClick = { onResumeClick(resume) },
+//                onATSClick = { onATSClick(resume) }
+//            )
 //        }
 //    }
 //}
@@ -251,110 +276,171 @@
 //@Composable
 //fun ResumeHistoryCard(
 //    resume: Resume,
-//    isDark: Boolean
+//    isDark: Boolean,
+//    onResumeClick: () -> Unit,
+//    onATSClick: () -> Unit
 //) {
 //    Card(
-//        modifier = Modifier.fillMaxWidth(),
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .clickable { onResumeClick() },
 //        shape = RoundedCornerShape(16.dp),
 //        colors = CardDefaults.cardColors(
 //            containerColor = if (isDark) Color(0xFF2a2a3e) else Color.White
 //        ),
 //        elevation = CardDefaults.cardElevation(6.dp)
 //    ) {
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(16.dp),
-//            verticalAlignment = Alignment.CenterVertically
+//        Column(
+//            modifier = Modifier.fillMaxWidth()
 //        ) {
-//            // File Icon
-//            Box(
+//            Row(
 //                modifier = Modifier
-//                    .size(56.dp)
-//                    .clip(RoundedCornerShape(12.dp))
-//                    .background(
-//                        Brush.linearGradient(
-//                            listOf(
-//                                Color(0xFF6C63FF).copy(0.2f),
-//                                Color(0xFF764ba2).copy(0.2f)
+//                    .fillMaxWidth()
+//                    .padding(16.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//                Box(
+//                    modifier = Modifier
+//                        .size(56.dp)
+//                        .clip(RoundedCornerShape(12.dp))
+//                        .background(
+//                            Brush.linearGradient(
+//                                listOf(
+//                                    Color(0xFF6C63FF).copy(0.2f),
+//                                    Color(0xFF764ba2).copy(0.2f)
+//                                )
 //                            )
-//                        )
-//                    ),
-//                contentAlignment = Alignment.Center
-//            ) {
-//                Icon(
-//                    Icons.Default.Description,
-//                    contentDescription = null,
-//                    tint = Color(0xFF6C63FF),
-//                    modifier = Modifier.size(32.dp)
-//                )
-//            }
-//
-//            Spacer(Modifier.width(16.dp))
-//
-//            // File Info
-//            Column(
-//                modifier = Modifier.weight(1f)
-//            ) {
-//                Text(
-//                    resume.fileName,
-//                    fontSize = 15.sp,
-//                    fontWeight = FontWeight.Bold,
-//                    color = if (isDark) Color.White else Color.Black,
-//                    maxLines = 1,
-//                    overflow = TextOverflow.Ellipsis
-//                )
-//
-//                Spacer(Modifier.height(4.dp))
-//
-//                Row(
-//                    verticalAlignment = Alignment.CenterVertically
+//                        ),
+//                    contentAlignment = Alignment.Center
 //                ) {
 //                    Icon(
-//                        Icons.Default.CalendarToday,
+//                        Icons.Default.Description,
 //                        contentDescription = null,
-//                        tint = if (isDark) Color.White.copy(0.5f) else Color.Gray,
-//                        modifier = Modifier.size(14.dp)
-//                    )
-//                    Spacer(Modifier.width(4.dp))
-//                    Text(
-//                        formatDate(resume.uploadedDate),
-//                        fontSize = 12.sp,
-//                        color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+//                        tint = Color(0xFF6C63FF),
+//                        modifier = Modifier.size(32.dp)
 //                    )
 //                }
 //
-//                Spacer(Modifier.height(4.dp))
+//                Spacer(Modifier.width(16.dp))
 //
-//                Text(
-//                    formatFileSize(resume.fileSize),
-//                    fontSize = 12.sp,
-//                    color = if (isDark) Color.White.copy(0.5f) else Color.Gray
-//                )
-//            }
-//
-//            // Score Badge
-//            Surface(
-//                shape = RoundedCornerShape(12.dp),
-//                color = getScoreColor(resume.atsScore ?: 0).copy(alpha = 0.2f),
-//                modifier = Modifier
-//                    .size(60.dp)
-//            ) {
 //                Column(
-//                    modifier = Modifier.fillMaxSize(),
-//                    horizontalAlignment = Alignment.CenterHorizontally,
-//                    verticalArrangement = Arrangement.Center
+//                    modifier = Modifier.weight(1f)
 //                ) {
 //                    Text(
-//                        "${resume.atsScore ?: 0}",
-//                        fontSize = 22.sp,
+//                        resume.fileName,
+//                        fontSize = 15.sp,
 //                        fontWeight = FontWeight.Bold,
-//                        color = getScoreColor(resume.atsScore ?: 0)
+//                        color = if (isDark) Color.White else Color.Black,
+//                        maxLines = 1,
+//                        overflow = TextOverflow.Ellipsis
 //                    )
+//
+//                    Spacer(Modifier.height(4.dp))
+//
+//                    Row(
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        Icon(
+//                            Icons.Default.CalendarToday,
+//                            contentDescription = null,
+//                            tint = if (isDark) Color.White.copy(0.5f) else Color.Gray,
+//                            modifier = Modifier.size(14.dp)
+//                        )
+//                        Spacer(Modifier.width(4.dp))
+//                        Text(
+//                            formatDate(resume.uploadedDate),
+//                            fontSize = 12.sp,
+//                            color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+//                        )
+//                    }
+//
+//                    Spacer(Modifier.height(4.dp))
+//
 //                    Text(
-//                        "Score",
-//                        fontSize = 10.sp,
-//                        color = getScoreColor(resume.atsScore ?: 0).copy(0.8f)
+//                        formatFileSize(resume.fileSize),
+//                        fontSize = 12.sp,
+//                        color = if (isDark) Color.White.copy(0.5f) else Color.Gray
+//                    )
+//                }
+//
+//                Surface(
+//                    shape = RoundedCornerShape(12.dp),
+//                    color = getScoreColor(resume.atsScore ?: 0).copy(alpha = 0.2f),
+//                    modifier = Modifier.size(60.dp)
+//                ) {
+//                    Column(
+//                        modifier = Modifier.fillMaxSize(),
+//                        horizontalAlignment = Alignment.CenterHorizontally,
+//                        verticalArrangement = Arrangement.Center
+//                    ) {
+//                        Text(
+//                            "${resume.atsScore ?: 0}",
+//                            fontSize = 22.sp,
+//                            fontWeight = FontWeight.Bold,
+//                            color = getScoreColor(resume.atsScore ?: 0)
+//                        )
+//                        Text(
+//                            "Score",
+//                            fontSize = 10.sp,
+//                            color = getScoreColor(resume.atsScore ?: 0).copy(0.8f)
+//                        )
+//                    }
+//                }
+//            }
+//
+//            Divider(
+//                color = if (isDark) Color.White.copy(0.1f) else Color.LightGray,
+//                modifier = Modifier.padding(horizontal = 16.dp)
+//            )
+//
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(12.dp),
+//                horizontalArrangement = Arrangement.spacedBy(8.dp)
+//            ) {
+//                Button(
+//                    onClick = onResumeClick,
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .height(40.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = Color(0xFF6C63FF)
+//                    ),
+//                    shape = RoundedCornerShape(12.dp)
+//                ) {
+//                    Icon(
+//                        Icons.Default.TipsAndUpdates,
+//                        contentDescription = null,
+//                        modifier = Modifier.size(16.dp)
+//                    )
+//                    Spacer(Modifier.width(4.dp))
+//                    Text(
+//                        "View Suggestions",
+//                        fontSize = 12.sp,
+//                        fontWeight = FontWeight.Bold
+//                    )
+//                }
+//
+//                OutlinedButton(
+//                    onClick = onATSClick,
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .height(40.dp),
+//                    shape = RoundedCornerShape(12.dp)
+//                ) {
+//                    Icon(
+//                        Icons.Default.Assessment,
+//                        contentDescription = null,
+//                        modifier = Modifier.size(16.dp),
+//                        tint = Color(0xFF6C63FF)
+//                    )
+//                    Spacer(Modifier.width(4.dp))
+//                    Text(
+//                        "View ATS",
+//                        fontSize = 12.sp,
+//                        color = Color(0xFF6C63FF),
+//                        fontWeight = FontWeight.Bold
 //                    )
 //                }
 //            }
@@ -382,6 +468,7 @@
 //        else -> String.format("%.2f MB", bytes / (1024.0 * 1024.0))
 //    }
 //}
+//
 
 
 package com.example.feature_student.history
@@ -418,7 +505,7 @@ fun HistoryScreen(
     isDark: Boolean,
     viewModel: HistoryViewModel = viewModel(),
     onNavigateToSuggestions: () -> Unit = {},
-    onNavigateToATS: (Resume) -> Unit = {}
+    onNavigateToATS: () -> Unit = {}
 ) {
     val resumes by viewModel.resumes.collectAsState()
     val averageScore by viewModel.averageScore.collectAsState()
@@ -450,13 +537,14 @@ fun HistoryScreen(
                 averageScore = averageScore,
                 isDark = isDark,
                 onResumeClick = { resume ->
-                    // Set latest resume in database and navigate to suggestions
-                    LocalResumeDatabase.updateResume(resume)
+                    // Set selected resume and navigate to suggestions
+                    LocalResumeDatabase.setSelectedResume(resume.id)
                     onNavigateToSuggestions()
                 },
                 onATSClick = { resume ->
-                    LocalResumeDatabase.updateResume(resume)
-                    onNavigateToATS(resume)
+                    // Set selected resume and navigate to ATS
+                    LocalResumeDatabase.setSelectedResume(resume.id)
+                    onNavigateToATS()
                 }
             )
         }
@@ -666,9 +754,7 @@ fun ResumeHistoryCard(
     onATSClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onResumeClick() },
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isDark) Color(0xFF2a2a3e) else Color.White
@@ -801,7 +887,7 @@ fun ResumeHistoryCard(
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        "View Suggestions",
+                        "Suggestions",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -812,7 +898,10 @@ fun ResumeHistoryCard(
                     modifier = Modifier
                         .weight(1f)
                         .height(40.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                        brush = Brush.linearGradient(listOf(Color(0xFF6C63FF), Color(0xFF6C63FF)))
+                    )
                 ) {
                     Icon(
                         Icons.Default.Assessment,
@@ -853,4 +942,3 @@ fun formatFileSize(bytes: Long): String {
         else -> String.format("%.2f MB", bytes / (1024.0 * 1024.0))
     }
 }
-
