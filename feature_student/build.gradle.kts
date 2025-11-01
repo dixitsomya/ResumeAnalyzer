@@ -51,6 +51,30 @@ dependencies {
     implementation("androidx.activity:activity-compose")
     implementation("androidx.compose.material:material-icons-extended")
 
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("com.itextpdf:itextg:5.5.10")
+    // ===== Google Gemini AI (FREE - Unlimited) =====
+    //implementation("com.google.ai.client.generativeai:generativeai:0.1.2")
+
+    //implementation("com.google.ai.client.generativeai:generativeai:0.7.0")
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+
+    // Ktor
+    implementation("io.ktor:ktor-client-android:2.3.7")
+    implementation("io.ktor:ktor-client-core:2.3.7")
+
+    // ===== ADD THESE (Hugging Face) =====
+
+    implementation("io.ktor:ktor-client-okhttp:2.3.7")
+    implementation("io.ktor:ktor-client-serialization:2.3.7")
+
+    // ===== JSON =====
+    implementation("com.google.code.gson:gson:2.10.1")
+
 
 
     implementation(libs.androidx.core.ktx)

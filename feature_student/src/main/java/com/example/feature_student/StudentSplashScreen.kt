@@ -103,6 +103,276 @@
 //}
 
 
+//package com.example.feature_student
+//
+//import androidx.compose.animation.AnimatedVisibility
+//import androidx.compose.animation.core.*
+//import androidx.compose.animation.fadeIn
+//import androidx.compose.animation.slideInVertically
+//import androidx.compose.foundation.background
+//import androidx.compose.foundation.layout.*
+//import androidx.compose.foundation.shape.CircleShape
+//import androidx.compose.foundation.shape.RoundedCornerShape
+//import androidx.compose.material.icons.Icons
+//import androidx.compose.material.icons.filled.TrendingUp
+//import androidx.compose.material3.*
+//import androidx.compose.runtime.*
+//import androidx.compose.ui.Alignment
+//import androidx.compose.ui.Modifier
+//import androidx.compose.ui.draw.rotate
+//import androidx.compose.ui.draw.scale
+//import androidx.compose.ui.draw.shadow
+//import androidx.compose.ui.graphics.Brush
+//import androidx.compose.ui.graphics.Color
+//import androidx.compose.ui.text.font.FontWeight
+//import androidx.compose.ui.text.style.TextAlign
+//import androidx.compose.ui.unit.dp
+//import androidx.compose.ui.unit.sp
+//import kotlinx.coroutines.delay
+//
+//@Composable
+//fun StudentSplashScreen(
+//    onSplashFinished: () -> Unit
+//) {
+//    var scale by remember { mutableStateOf(0.3f) }
+//    var showText by remember { mutableStateOf(false) }
+//    var showSubText by remember { mutableStateOf(false) }
+//    var iconRotation by remember { mutableStateOf(0f) }
+//
+//    // Continuous rotation animation for icon
+//    val infiniteRotation by rememberInfiniteTransition().animateFloat(
+//        initialValue = 0f,
+//        targetValue = 360f,
+//        animationSpec = infiniteRepeatable(
+//            animation = tween(3000, easing = LinearEasing),
+//            repeatMode = RepeatMode.Restart
+//        )
+//    )
+//
+//    LaunchedEffect(Unit) {
+//        // Smooth scale animation
+//        scale = 1f
+//        delay(800)
+//        showText = true
+//        delay(600)
+//        showSubText = true
+//        delay(1800) // Total 3.2 seconds
+//        onSplashFinished()
+//    }
+//
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(
+//                Brush.radialGradient(
+//                    colors = listOf(
+//                        Color(0xFF667eea),
+//                        Color(0xFF764ba2),
+//                        Color(0xFF2C1810)
+//                    ),
+//                    radius = 1000f
+//                )
+//            ),
+//        contentAlignment = Alignment.Center
+//    ) {
+//        // Background floating elements for depth
+//        repeat(6) { index ->
+//            Box(
+//                modifier = Modifier
+//                    .size((40 + index * 20).dp)
+//                    .offset(
+//                        x = ((-150..150).random()).dp,
+//                        y = ((-200..200).random()).dp
+//                    )
+//                    .background(
+//                        Color.White.copy(alpha = 0.05f),
+//                        CircleShape
+//                    )
+//                    .scale(
+//                        animateFloatAsState(
+//                            targetValue = if (scale > 0.5f) 1f else 0f,
+//                            animationSpec = tween(
+//                                durationMillis = 1500 + index * 200,
+//                                easing = FastOutSlowInEasing
+//                            )
+//                        ).value
+//                    )
+//            )
+//        }
+//
+//        Card(
+//            modifier = Modifier
+//                .padding(24.dp)
+//                .scale(
+//                    animateFloatAsState(
+//                        targetValue = scale,
+//                        animationSpec = spring(
+//                            dampingRatio = Spring.DampingRatioMediumBouncy,
+//                            stiffness = Spring.StiffnessLow
+//                        )
+//                    ).value
+//                )
+//                .shadow(24.dp, RoundedCornerShape(32.dp)),
+//            shape = RoundedCornerShape(32.dp),
+//            colors = CardDefaults.cardColors(
+//                containerColor = Color.White.copy(alpha = 0.95f)
+//            ),
+//            elevation = CardDefaults.cardElevation(0.dp)
+//        ) {
+//            Column(
+//                modifier = Modifier
+//                    .padding(40.dp)
+//                    .fillMaxWidth(),
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                // Enhanced icon container with gradient background
+//                Box(
+//                    modifier = Modifier
+//                        .size(140.dp)
+//                        .background(
+//                            Brush.radialGradient(
+//                                colors = listOf(
+//                                    Color(0xFF667eea),
+//                                    Color(0xFF764ba2)
+//                                )
+//                            ),
+//                            CircleShape
+//                        )
+//                        .shadow(16.dp, CircleShape),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    // Inner white circle
+//                    Box(
+//                        modifier = Modifier
+//                            .size(100.dp)
+//                            .background(Color.White, CircleShape),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.TrendingUp,
+//                            contentDescription = "Career Growth",
+//                            tint = Color(0xFF667eea),
+//                            modifier = Modifier
+//                                .size(56.dp)
+//                                .rotate(infiniteRotation * 0.1f) // Subtle rotation
+//                        )
+//                    }
+//                }
+//
+//                Spacer(modifier = Modifier.height(32.dp))
+//
+//                // Main title with enhanced animation
+//                AnimatedVisibility(
+//                    visible = showText,
+//                    enter = fadeIn(
+//                        animationSpec = tween(1000, easing = FastOutSlowInEasing)
+//                    ) + slideInVertically(
+//                        initialOffsetY = { it / 3 },
+//                        animationSpec = tween(1000, easing = FastOutSlowInEasing)
+//                    )
+//                ) {
+//                    Column(
+//                        horizontalAlignment = Alignment.CenterHorizontally
+//                    ) {
+//                        Text(
+//                            text = "Resume Analyzer",
+//                            fontSize = 28.sp,
+//                            fontWeight = FontWeight.Bold,
+//                            color = Color(0xFF2D3748),
+//                            textAlign = TextAlign.Center
+//                        )
+//
+//                        Spacer(modifier = Modifier.height(8.dp))
+//
+//                        // Subtitle line
+//                        Box(
+//                            modifier = Modifier
+//                                .width(80.dp)
+//                                .height(3.dp)
+//                                .background(
+//                                    Brush.horizontalGradient(
+//                                        listOf(
+//                                            Color.Transparent,
+//                                            Color(0xFF667eea),
+//                                            Color.Transparent
+//                                        )
+//                                    ),
+//                                    RoundedCornerShape(2.dp)
+//                                )
+//                        )
+//                    }
+//                }
+//
+//                Spacer(modifier = Modifier.height(20.dp))
+//
+//                // Subtitle text
+//                AnimatedVisibility(
+//                    visible = showSubText,
+//                    enter = fadeIn(
+//                        animationSpec = tween(800, easing = FastOutSlowInEasing)
+//                    ) + slideInVertically(
+//                        initialOffsetY = { it / 4 },
+//                        animationSpec = tween(800, easing = FastOutSlowInEasing)
+//                    )
+//                ) {
+//                    Column(
+//                        horizontalAlignment = Alignment.CenterHorizontally
+//                    ) {
+//                        Text(
+//                            text = "Your career journey starts here",
+//                            fontSize = 16.sp,
+//                            fontWeight = FontWeight.Medium,
+//                            color = Color(0xFF4A5568),
+//                            textAlign = TextAlign.Center,
+//                            lineHeight = 22.sp
+//                        )
+//
+//                        Spacer(modifier = Modifier.height(8.dp))
+//
+//                        Text(
+//                            text = "Analyze • Improve • Succeed",
+//                            fontSize = 14.sp,
+//                            fontWeight = FontWeight.Normal,
+//                            color = Color(0xFF667eea),
+//                            textAlign = TextAlign.Center,
+//                            letterSpacing = 1.sp
+//                        )
+//                    }
+//                }
+//
+//                Spacer(modifier = Modifier.height(20.dp))
+//
+//                // Loading indicator
+//                AnimatedVisibility(
+//                    visible = showSubText,
+//                    enter = fadeIn(animationSpec = tween(600))
+//                ) {
+//                    Row(
+//                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+//                    ) {
+//                        repeat(3) { index ->
+//                            Box(
+//                                modifier = Modifier
+//                                    .size(8.dp)
+//                                    .background(
+//                                        Color(0xFF667eea).copy(
+//                                            alpha = animateFloatAsState(
+//                                                targetValue = if ((infiniteRotation / 120f).toInt() % 3 == index) 1f else 0.3f,
+//                                                animationSpec = tween(300)
+//                                            ).value
+//                                        ),
+//                                        CircleShape
+//                                    )
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+
+
 package com.example.feature_student
 
 import androidx.compose.animation.AnimatedVisibility
@@ -110,6 +380,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -134,66 +405,86 @@ import kotlinx.coroutines.delay
 fun StudentSplashScreen(
     onSplashFinished: () -> Unit
 ) {
-    var scale by remember { mutableStateOf(0.3f) }
+    val isDark = isSystemInDarkTheme()
+
+    var scale by remember { mutableStateOf(0.4f) }
     var showText by remember { mutableStateOf(false) }
     var showSubText by remember { mutableStateOf(false) }
-    var iconRotation by remember { mutableStateOf(0f) }
 
-    // Continuous rotation animation for icon
+    // Subtle rotation animation
     val infiniteRotation by rememberInfiniteTransition().animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
+            animation = tween(4000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         )
     )
 
     LaunchedEffect(Unit) {
-        // Smooth scale animation
         scale = 1f
-        delay(800)
-        showText = true
         delay(600)
+        showText = true
+        delay(500)
         showSubText = true
-        delay(1800) // Total 3.2 seconds
+        delay(1700) // Total 2.8 seconds
         onSplashFinished()
     }
+
+    // Theme-aware colors
+    val backgroundColors = if (isDark) {
+        listOf(
+            Color(0xFF1A1B3E),
+            Color(0xFF2D1B69),
+            Color(0xFF0F0C29)
+        )
+    } else {
+        listOf(
+            Color(0xFF667eea),
+            Color(0xFF764ba2),
+            Color(0xFFE8E8F5)
+        )
+    }
+
+    val cardColor = if (isDark) {
+        Color(0xFF1E1E2F).copy(alpha = 0.95f)
+    } else {
+        Color.White.copy(alpha = 0.95f)
+    }
+
+    val primaryColor = if (isDark) Color(0xFF8B7CF6) else Color(0xFF6366F1)
+    val textColor = if (isDark) Color(0xFFF1F5F9) else Color(0xFF334155)
+    val subtextColor = if (isDark) Color(0xFFCBD5E1) else Color(0xFF64748B)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.radialGradient(
-                    colors = listOf(
-                        Color(0xFF667eea),
-                        Color(0xFF764ba2),
-                        Color(0xFF2C1810)
-                    ),
-                    radius = 1000f
+                Brush.verticalGradient(
+                    colors = backgroundColors
                 )
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Background floating elements for depth
-        repeat(6) { index ->
+        // Subtle floating elements
+        repeat(4) { index ->
             Box(
                 modifier = Modifier
-                    .size((40 + index * 20).dp)
+                    .size((60 + index * 15).dp)
                     .offset(
-                        x = ((-150..150).random()).dp,
-                        y = ((-200..200).random()).dp
+                        x = ((-120..120).random()).dp,
+                        y = ((-150..150).random()).dp
                     )
                     .background(
-                        Color.White.copy(alpha = 0.05f),
+                        Color.White.copy(alpha = if (isDark) 0.03f else 0.06f),
                         CircleShape
                     )
                     .scale(
                         animateFloatAsState(
-                            targetValue = if (scale > 0.5f) 1f else 0f,
+                            targetValue = if (scale > 0.6f) 1f else 0f,
                             animationSpec = tween(
-                                durationMillis = 1500 + index * 200,
-                                easing = FastOutSlowInEasing
+                                durationMillis = 1200 + index * 150,
+                                easing = EaseOutCubic
                             )
                         ).value
                     )
@@ -202,73 +493,73 @@ fun StudentSplashScreen(
 
         Card(
             modifier = Modifier
-                .padding(24.dp)
+                .padding(32.dp)
                 .scale(
                     animateFloatAsState(
                         targetValue = scale,
                         animationSpec = spring(
                             dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessLow
+                            stiffness = Spring.StiffnessMedium
                         )
                     ).value
                 )
-                .shadow(24.dp, RoundedCornerShape(32.dp)),
-            shape = RoundedCornerShape(32.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White.copy(alpha = 0.95f)
-            ),
+                .shadow(
+                    elevation = if (isDark) 12.dp else 20.dp,
+                    shape = RoundedCornerShape(28.dp),
+                    ambientColor = primaryColor.copy(alpha = 0.1f)
+                ),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = cardColor),
             elevation = CardDefaults.cardElevation(0.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .padding(40.dp)
+                    .padding(36.dp)
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Enhanced icon container with gradient background
+                // Elegant icon design
                 Box(
                     modifier = Modifier
-                        .size(140.dp)
+                        .size(120.dp)
                         .background(
                             Brush.radialGradient(
                                 colors = listOf(
-                                    Color(0xFF667eea),
-                                    Color(0xFF764ba2)
+                                    primaryColor,
+                                    primaryColor.copy(alpha = 0.8f)
                                 )
                             ),
                             CircleShape
-                        )
-                        .shadow(16.dp, CircleShape),
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Inner white circle
                     Box(
                         modifier = Modifier
-                            .size(100.dp)
-                            .background(Color.White, CircleShape),
+                            .size(88.dp)
+                            .background(cardColor, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.TrendingUp,
-                            contentDescription = "Career Growth",
-                            tint = Color(0xFF667eea),
+                            contentDescription = "Resume Analyzer",
+                            tint = primaryColor,
                             modifier = Modifier
-                                .size(56.dp)
-                                .rotate(infiniteRotation * 0.1f) // Subtle rotation
+                                .size(48.dp)
+                                .rotate(infiniteRotation * 0.05f) // Very subtle rotation
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(28.dp))
 
-                // Main title with enhanced animation
+                // Main title
                 AnimatedVisibility(
                     visible = showText,
                     enter = fadeIn(
-                        animationSpec = tween(1000, easing = FastOutSlowInEasing)
+                        animationSpec = tween(800, easing = EaseOutCubic)
                     ) + slideInVertically(
-                        initialOffsetY = { it / 3 },
-                        animationSpec = tween(1000, easing = FastOutSlowInEasing)
+                        initialOffsetY = { it / 4 },
+                        animationSpec = tween(800, easing = EaseOutCubic)
                     )
                 ) {
                     Column(
@@ -276,43 +567,38 @@ fun StudentSplashScreen(
                     ) {
                         Text(
                             text = "Resume Analyzer",
-                            fontSize = 28.sp,
+                            fontSize = 26.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF2D3748),
-                            textAlign = TextAlign.Center
+                            color = textColor,
+                            textAlign = TextAlign.Center,
+                            letterSpacing = 0.5.sp
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
-                        // Subtitle line
+                        // Elegant underline
                         Box(
                             modifier = Modifier
-                                .width(80.dp)
-                                .height(3.dp)
+                                .width(60.dp)
+                                .height(2.dp)
                                 .background(
-                                    Brush.horizontalGradient(
-                                        listOf(
-                                            Color.Transparent,
-                                            Color(0xFF667eea),
-                                            Color.Transparent
-                                        )
-                                    ),
-                                    RoundedCornerShape(2.dp)
+                                    primaryColor.copy(alpha = 0.6f),
+                                    RoundedCornerShape(1.dp)
                                 )
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                // Subtitle text
+                // Subtitle
                 AnimatedVisibility(
                     visible = showSubText,
                     enter = fadeIn(
-                        animationSpec = tween(800, easing = FastOutSlowInEasing)
+                        animationSpec = tween(600, easing = EaseOutCubic)
                     ) + slideInVertically(
-                        initialOffsetY = { it / 4 },
-                        animationSpec = tween(800, easing = FastOutSlowInEasing)
+                        initialOffsetY = { it / 5 },
+                        animationSpec = tween(600, easing = EaseOutCubic)
                     )
                 ) {
                     Column(
@@ -320,50 +606,34 @@ fun StudentSplashScreen(
                     ) {
                         Text(
                             text = "Your career journey starts here",
-                            fontSize = 16.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF4A5568),
+                            color = subtextColor,
                             textAlign = TextAlign.Center,
-                            lineHeight = 22.sp
+                            lineHeight = 20.sp
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                        Text(
-                            text = "Analyze • Improve • Succeed",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Normal,
-                            color = Color(0xFF667eea),
-                            textAlign = TextAlign.Center,
-                            letterSpacing = 1.sp
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Loading indicator
-                AnimatedVisibility(
-                    visible = showSubText,
-                    enter = fadeIn(animationSpec = tween(600))
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        repeat(3) { index ->
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .background(
-                                        Color(0xFF667eea).copy(
-                                            alpha = animateFloatAsState(
-                                                targetValue = if ((infiniteRotation / 120f).toInt() % 3 == index) 1f else 0.3f,
-                                                animationSpec = tween(300)
-                                            ).value
-                                        ),
-                                        CircleShape
-                                    )
-                            )
+                        // Simple loading dots
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            repeat(3) { index ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .background(
+                                            primaryColor.copy(
+                                                alpha = animateFloatAsState(
+                                                    targetValue = if ((infiniteRotation / 100f).toInt() % 3 == index) 0.8f else 0.3f,
+                                                    animationSpec = tween(400)
+                                                ).value
+                                            ),
+                                            CircleShape
+                                        )
+                                )
+                            }
                         }
                     }
                 }
