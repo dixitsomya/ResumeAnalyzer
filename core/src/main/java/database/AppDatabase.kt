@@ -5,7 +5,11 @@ import androidx.room.RoomDatabase
 import com.example.resumeanalyzer.core.database.dao.UserDao
 import com.example.resumeanalyzer.core.database.entity.UserEntity
 
-@Database(entities = [UserEntity::class], version = 2)
+@Database(
+    entities = [UserEntity::class],
+    version = 3,
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
 }

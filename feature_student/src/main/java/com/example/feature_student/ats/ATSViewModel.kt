@@ -27,27 +27,32 @@ class ATSViewModel : ViewModel() {
 
     fun loadData() {
         viewModelScope.launch {
-            val selectedResumeId = LocalResumeDatabase.selectedResumeId.value
+            try {
+                val selectedResumeId = LocalResumeDatabase.selectedResumeId.value
 
-            if (selectedResumeId != null) {
-                val selectedResume = LocalResumeDatabase.getResumes()
-                    .find { it.id == selectedResumeId }
+                if (selectedResumeId != null) {
+                    val selectedResume = LocalResumeDatabase.getResumes()
+                        .find { it.id == selectedResumeId }
 
-                if (selectedResume != null) {
-                    _latestResume.value = selectedResume
-                    _analysisResult.value = LocalResumeDatabase.getAnalysisResult(selectedResumeId)
+                    if (selectedResume != null) {
+                        _latestResume.value = selectedResume
+                        // FIX: Now a suspend function
+                        _analysisResult.value = LocalResumeDatabase.getAnalysisResult(selectedResumeId)
+                    } else {
+                        loadLatestResume()
+                    }
                 } else {
                     loadLatestResume()
                 }
-            } else {
-                loadLatestResume()
-            }
 
-            _analyzedCount.value = LocalResumeDatabase.getTotalAnalyzed()
+                _analyzedCount.value = LocalResumeDatabase.getTotalAnalyzed()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
-    private fun loadLatestResume() {
+    private suspend fun loadLatestResume() {
         _latestResume.value = LocalResumeDatabase.getLatestResume()
         _analysisResult.value = LocalResumeDatabase.getLatestAnalysisResult()
     }

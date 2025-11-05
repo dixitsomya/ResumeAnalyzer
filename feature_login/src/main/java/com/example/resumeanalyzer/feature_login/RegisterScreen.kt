@@ -1,4 +1,3 @@
-
 package com.example.feature_login
 
 import androidx.compose.foundation.background
@@ -34,6 +33,7 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("Student") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
     val roles = listOf("Student", "Recruiter")
@@ -85,16 +85,18 @@ fun RegisterScreen(
                     onValueChange = { name = it },
                     label = { Text("Name") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isLoading
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
                 TextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = { email = it.trim() },
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isLoading
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -104,13 +106,17 @@ fun RegisterScreen(
                     label = { Text("Password") },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isLoading
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
                 //  Role Dropdown
                 var expanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { if (!isLoading) expanded = !expanded }
+                ) {
                     TextField(
                         value = role,
                         onValueChange = {},
@@ -118,7 +124,8 @@ fun RegisterScreen(
                         label = { Text("Register as") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = !isLoading
                     )
                     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         roles.forEach {
@@ -143,28 +150,61 @@ fun RegisterScreen(
                             return@Button
                         }
 
-                        val db = DatabaseModule.provideDatabase(context)
-                        val userDao = DatabaseModule.provideUserDao(db)
-                        scope.launch(Dispatchers.IO) {
-                            val existing = userDao.getUserByEmail(email)
-                            if (existing != null) {
-                                withContext(Dispatchers.Main) {
-                                    errorMessage = "User already exists"
+                        isLoading = true
+                        errorMessage = null
+
+                        scope.launch {
+                            try {
+                                val db = DatabaseModule.provideDatabase(context)
+                                val userDao = DatabaseModule.provideUserDao(db)
+
+                                withContext(Dispatchers.IO) {
+                                    val existing = userDao.getUserByEmail(email.trim())
+
+                                    withContext(Dispatchers.Main) {
+                                        if (existing != null) {
+                                            errorMessage = "User already exists"
+                                            isLoading = false
+                                        } else {
+                                            // Register in IO thread
+                                            withContext(Dispatchers.IO) {
+                                                userDao.registerUser(
+                                                    UserEntity(
+                                                        name = name.trim(),
+                                                        email = email.trim(),
+                                                        password = password,
+                                                        role = role
+                                                    )
+                                                )
+                                            }
+
+                                            withContext(Dispatchers.Main) {
+                                                isLoading = false
+                                                onLoginClick() // Navigate to login screen
+                                            }
+                                        }
+                                    }
                                 }
-                            } else {
-                                userDao.registerUser(
-                                    UserEntity(name = name, email = email, password = password, role = role)
-                                )
+                            } catch (e: Exception) {
                                 withContext(Dispatchers.Main) {
-                                    onLoginClick() //  Register ke baad Login screen pe bhejna
+                                    errorMessage = "Registration failed: ${e.message}"
+                                    isLoading = false
                                 }
                             }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isLoading
                 ) {
-                    Text("Register")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text("Register")
+                    }
                 }
 
                 errorMessage?.let {
@@ -181,7 +221,10 @@ fun RegisterScreen(
                 ) {
                     Text("Already have an account?")
                     Spacer(modifier = Modifier.width(6.dp))
-                    TextButton(onClick = { onLoginClick() }) {
+                    TextButton(
+                        onClick = { onLoginClick() },
+                        enabled = !isLoading
+                    ) {
                         Text("Login")
                     }
                 }

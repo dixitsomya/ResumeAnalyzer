@@ -1,4 +1,3 @@
-
 package com.example.feature_student.history
 
 import androidx.compose.foundation.background
@@ -36,6 +35,7 @@ fun HistoryScreen(
 ) {
     val resumes by viewModel.resumes.collectAsState()
     val averageScore by viewModel.averageScore.collectAsState()
+    var showDeleteAllDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
@@ -64,17 +64,50 @@ fun HistoryScreen(
                 averageScore = averageScore,
                 isDark = isDark,
                 onResumeClick = { resume ->
-                    // Set selected resume and navigate to suggestions
                     LocalResumeDatabase.setSelectedResume(resume.id)
                     onNavigateToSuggestions()
                 },
                 onATSClick = { resume ->
-                    // Set selected resume and navigate to ATS
                     LocalResumeDatabase.setSelectedResume(resume.id)
                     onNavigateToATS()
+                },
+                onDeleteAllClick = {
+                    showDeleteAllDialog = true
+                },
+                onDeleteResume = { resume ->
+                    viewModel.deleteResume(resume.id)
                 }
             )
         }
+    }
+
+    // ✅ Delete All Confirmation Dialog
+    if (showDeleteAllDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAllDialog = false },
+            title = {
+                Text("Delete All Resumes?", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text("This action will permanently delete all ${resumes.size} resumes and their analysis. This cannot be undone.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteAllResumes()
+                        showDeleteAllDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
+                ) {
+                    Text("Delete All", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAllDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -120,7 +153,9 @@ fun HistoryContent(
     averageScore: Double,
     isDark: Boolean,
     onResumeClick: (Resume) -> Unit,
-    onATSClick: (Resume) -> Unit
+    onATSClick: (Resume) -> Unit,
+    onDeleteAllClick: () -> Unit,
+    onDeleteResume: (Resume) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -220,14 +255,45 @@ fun HistoryContent(
             }
         }
 
+        // ✅ All Resumes Header with Delete All Button
         item {
-            Text(
-                "All Resumes",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (isDark) Color.White else Color(0xFF1a1a2e),
-                modifier = Modifier.padding(horizontal = 4.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "All Resumes",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isDark) Color.White else Color(0xFF1a1a2e)
+                )
+
+                Button(
+                    onClick = onDeleteAllClick,
+                    modifier = Modifier.height(36.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFF44336)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.DeleteForever,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.White
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "Delete All",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
         }
 
         items(resumes) { resume ->
@@ -235,7 +301,8 @@ fun HistoryContent(
                 resume = resume,
                 isDark = isDark,
                 onResumeClick = { onResumeClick(resume) },
-                onATSClick = { onATSClick(resume) }
+                onATSClick = { onATSClick(resume) },
+                onDeleteClick = { onDeleteResume(resume) }
             )
         }
     }
@@ -278,8 +345,11 @@ fun ResumeHistoryCard(
     resume: Resume,
     isDark: Boolean,
     onResumeClick: () -> Unit,
-    onATSClick: () -> Unit
+    onATSClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -361,42 +431,53 @@ fun ResumeHistoryCard(
                     )
                 }
 
+                // ✅ Delete button for individual resume
+                IconButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = Color(0xFFF44336),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = getScoreColor(resume.atsScore ?: 0).copy(alpha = 0.2f),
-                    modifier = Modifier.size(60.dp)
+                    modifier = Modifier.weight(0.3f)
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
                             "${resume.atsScore ?: 0}",
-                            fontSize = 22.sp,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = getScoreColor(resume.atsScore ?: 0)
                         )
                         Text(
                             "Score",
-                            fontSize = 10.sp,
+                            fontSize = 9.sp,
                             color = getScoreColor(resume.atsScore ?: 0).copy(0.8f)
                         )
                     }
                 }
-            }
 
-            Divider(
-                color = if (isDark) Color.White.copy(0.1f) else Color.LightGray,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
                 Button(
                     onClick = onResumeClick,
                     modifier = Modifier
@@ -446,6 +527,35 @@ fun ResumeHistoryCard(
                 }
             }
         }
+    }
+
+    // ✅ Delete Single Resume Confirmation Dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text("Delete Resume?", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text("This will permanently delete '${resume.fileName}' and its analysis. This cannot be undone.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDeleteClick()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
+                ) {
+                    Text("Delete", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

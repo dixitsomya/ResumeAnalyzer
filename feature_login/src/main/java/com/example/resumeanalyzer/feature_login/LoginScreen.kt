@@ -30,6 +30,7 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
     val roles = listOf("Student", "Recruiter")
@@ -92,7 +93,8 @@ fun LoginScreen(
                     onValueChange = { email = it },
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isLoading
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -102,45 +104,70 @@ fun LoginScreen(
                     label = { Text("Password") },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isLoading
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = {
-                        val db = DatabaseModule.provideDatabase(context)
-                        val userDao = DatabaseModule.provideUserDao(db)
-                        scope.launch(Dispatchers.IO) {
-                            val user = userDao.loginUser(email, password)
-                            withContext(Dispatchers.Main) {
-//                                if (user != null && user.role == role) {
-//                                    if (role == "Student") {
-//                                        onStudentLogin()
-//                                    } else {
-//                                        onRecruiterLogin()
-//                                    }
-//                                } else {
-//                                    errorMessage = "Invalid credentials or wrong role"
-//                                }
-                                if (user != null && user.role == role) {
-                                    scope.launch {
-                                        UserPreference.saveUser(context, user.email, user.role)
+                        if (email.isBlank() || password.isBlank()) {
+                            errorMessage = "Please fill all fields"
+                            return@Button
+                        }
+
+                        isLoading = true
+                        errorMessage = null
+
+                        scope.launch {
+                            try {
+                                val db = DatabaseModule.provideDatabase(context)
+                                val userDao = DatabaseModule.provideUserDao(db)
+
+                                withContext(Dispatchers.IO) {
+                                    val user = userDao.loginUser(email.trim(), password)
+
+                                    withContext(Dispatchers.Main) {
+                                        if (user != null && user.role == role) {
+                                            // Save user to preferences
+                                            scope.launch {
+                                                UserPreference.saveUser(context, user.email, user.role, user.name)
+                                            }
+
+                                            // Navigate based on role
+                                            if (role == "Student") {
+                                                onStudentLogin(user.email)
+                                            } else {
+                                                onRecruiterLogin()
+                                            }
+                                        } else if (user != null && user.role != role) {
+                                            errorMessage = "Wrong role selected. You are registered as ${user.role}"
+                                        } else {
+                                            errorMessage = "Invalid email or password"
+                                        }
+                                        isLoading = false
                                     }
-                                    if (role == "Student") {
-                                        onStudentLogin(user.email)
-                                    } else {
-                                        onRecruiterLogin()
-                                    }
-                                } else {
-                                    errorMessage = "Invalid credentials or wrong role"
+                                }
+                            } catch (e: Exception) {
+                                withContext(Dispatchers.Main) {
+                                    errorMessage = "Login failed: ${e.message}"
+                                    isLoading = false
                                 }
                             }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isLoading
                 ) {
-                    Text("Login")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text("Login")
+                    }
                 }
 
                 errorMessage?.let {
@@ -155,7 +182,7 @@ fun LoginScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Don’t have an account?")
+                    Text("Don't have an account?")
                     Spacer(modifier = Modifier.width(6.dp))
                     TextButton(onClick = { onRegisterClick() }) {
                         Text("Register")
@@ -165,4 +192,3 @@ fun LoginScreen(
         }
     }
 }
-
