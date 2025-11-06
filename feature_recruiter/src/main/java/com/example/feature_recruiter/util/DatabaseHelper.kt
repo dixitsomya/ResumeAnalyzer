@@ -32,6 +32,7 @@ import com.example.feature_recruiter.database.RecruiterDatabase
 
 object DatabaseHelper {
 
+    @Volatile
     private var instance: RecruiterDatabase? = null
 
     fun getDatabase(context: Context): RecruiterDatabase {
@@ -42,6 +43,7 @@ object DatabaseHelper {
                 "recruiter_database"
             )
                 .fallbackToDestructiveMigration()
+                .enableMultiInstanceInvalidation()  // ✅ Prevent binder issues
                 .build()
             instance = db
             db

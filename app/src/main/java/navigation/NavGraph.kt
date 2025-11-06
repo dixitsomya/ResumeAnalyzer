@@ -291,16 +291,16 @@ fun AppNavGraph(
         }
 
         // Recruiter Settings
-        composable("recruiter_settings") {
-            val context = LocalContext.current
-            val user by UserPreference.getUser(context).collectAsState(initial = UserCache())
-
-            RecruiterSettingsScreen(
-                userEmail = user.email ?: "",
-                onBack = { navController.popBackStack() },
-                onThemeChange = { theme -> onThemeChange(theme) },
-                navController = navController
-            )
-        }
+//        composable("recruiter_settings") {
+//            val context = LocalContext.current
+//            val user by UserPreference.getUser(context).collectAsState(initial = UserCache())
+//
+//            RecruiterSettingsScreen(
+//                userEmail = user.email ?: "",
+//                onBack = { navController.popBackStack() },
+//                onThemeChange = { theme -> onThemeChange(theme) },
+//                navController = navController
+//            )
+//        }
     }
 }

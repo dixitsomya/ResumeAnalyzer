@@ -1,3 +1,7 @@
+
+// ============================================
+// FILE: RecruiterMainScreen.kt (FINAL BEAUTIFUL VERSION)
+// ============================================
 //package com.example.feature_recruiter
 //
 //import androidx.compose.foundation.background
@@ -12,6 +16,7 @@
 //import androidx.compose.ui.Alignment
 //import androidx.compose.ui.Modifier
 //import androidx.compose.ui.draw.clip
+//import androidx.compose.ui.draw.shadow
 //import androidx.compose.ui.graphics.Color
 //import androidx.compose.ui.platform.LocalContext
 //import androidx.compose.ui.text.font.FontWeight
@@ -41,7 +46,7 @@
 //    val userEmail = user.email ?: "Recruiter"
 //    val scope = rememberCoroutineScope()
 //
-//    // Initialize Database
+//    // Initialize Database & ViewModels
 //    val db = remember { DatabaseHelper.getDatabase(context) }
 //    val resumeRepo = remember { RecruiterResumeRepository(db.recruiterResumeDao()) }
 //    val profileRepo = remember { RecruiterProfileRepository(db.recruiterProfileDao()) }
@@ -50,7 +55,7 @@
 //
 //    // UI State
 //    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-//    var selectedScreen by remember { mutableStateOf("home") }
+//    var selectedScreen by remember { mutableStateOf("dashboard") }
 //    var showSetupDialog by remember { mutableStateOf(false) }
 //
 //    val isDark = when (user.theme) {
@@ -59,7 +64,7 @@
 //        else -> isSystemInDarkTheme()
 //    }
 //
-//    // Check if setup is completed
+//    // Check profile setup
 //    val profile by profileViewModel.profile.collectAsState()
 //    LaunchedEffect(profile) {
 //        if (profile == null) {
@@ -67,7 +72,7 @@
 //        }
 //    }
 //
-//    // Show setup dialog on first login
+//    // Show company setup dialog on first login
 //    if (showSetupDialog) {
 //        CompanySetupDialog(
 //            recruiterEmail = userEmail,
@@ -86,48 +91,64 @@
 //            ModalDrawerSheet(
 //                modifier = Modifier
 //                    .fillMaxHeight()
-//                    .width(320.dp),
-//                drawerContainerColor = if (isDark) Color(0xFF121212) else Color(0xFFF5F6FA)
+//                    .width(300.dp),
+//                drawerContainerColor = if (isDark) Color(0xFF121212) else Color.White
 //            ) {
-//                Column(
+//                // Drawer Header
+//                Box(
 //                    modifier = Modifier
 //                        .fillMaxWidth()
+//                        .background(
+//                            if (isDark)
+//                                Color(0xFF1E1E2E)
+//                            else
+//                                Color(0xFF4A90E2)
+//                        )
 //                        .padding(16.dp),
-//                    horizontalAlignment = Alignment.CenterHorizontally
+//                    contentAlignment = Alignment.Center
 //                ) {
-//                    Box(
-//                        modifier = Modifier
-//                            .size(70.dp)
-//                            .clip(CircleShape)
-//                            .background(Color(0xFF4A90E2)),
-//                        contentAlignment = Alignment.Center
+//                    Column(
+//                        horizontalAlignment = Alignment.CenterHorizontally,
+//                        verticalArrangement = Arrangement.spacedBy(8.dp)
 //                    ) {
+//                        Box(
+//                            modifier = Modifier
+//                                .size(60.dp)
+//                                .clip(CircleShape)
+//                                .background(
+//                                    if (isDark)
+//                                        Color(0xFF4A90E2)
+//                                    else
+//                                        Color.White.copy(alpha = 0.3f)
+//                                ),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Text(
+//                                userEmail.firstOrNull()?.uppercase() ?: "R",
+//                                color = if (isDark) Color.White else Color.White,
+//                                fontSize = 24.sp,
+//                                fontWeight = FontWeight.Bold
+//                            )
+//                        }
 //                        Text(
-//                            userEmail.firstOrNull()?.uppercase() ?: "R",
-//                            color = Color.White,
-//                            fontSize = 28.sp,
-//                            fontWeight = FontWeight.Bold
-//                        )
-//                    }
-//                    Spacer(modifier = Modifier.height(8.dp))
-//                    Text(
-//                        userEmail,
-//                        fontSize = 14.sp,
-//                        color = if (isDark) Color.LightGray else Color.DarkGray,
-//                        fontWeight = FontWeight.Medium,
-//                        maxLines = 1
-//                    )
-//                    if (profile != null) {
-//                        Text(
-//                            profile!!.companyName,
+//                            userEmail,
 //                            fontSize = 12.sp,
-//                            color = if (isDark) Color.LightGray else Color.DarkGray
+//                            color = if (isDark) Color.White else Color.White,
+//                            fontWeight = FontWeight.Medium
 //                        )
+//                        if (profile != null) {
+//                            Text(
+//                                profile!!.companyName,
+//                                fontSize = 11.sp,
+//                                color = if (isDark) Color.White.copy(0.7f) else Color.White.copy(0.8f)
+//                            )
+//                        }
 //                    }
 //                }
 //
 //                Spacer(Modifier.height(16.dp))
 //
+//                // Menu Items
 //                DrawerItemRecruiter(
 //                    icon = Icons.Default.Home,
 //                    text = "Dashboard",
@@ -207,21 +228,28 @@
 //                    title = {
 //                        Text(
 //                            text = getRecruiterScreenTitle(selectedScreen),
-//                            fontWeight = FontWeight.Bold
+//                            fontWeight = FontWeight.Bold,
+//                            color = Color.White
 //                        )
 //                    },
 //                    navigationIcon = {
 //                        IconButton(onClick = {
 //                            scope.launch { drawerState.open() }
 //                        }) {
-//                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+//                            Icon(
+//                                Icons.Default.Menu,
+//                                contentDescription = "Menu",
+//                                tint = Color.White
+//                            )
 //                        }
 //                    },
 //                    colors = TopAppBarDefaults.topAppBarColors(
-//                        containerColor = if (isDark) Color(0xFF1a1a2e) else Color(0xFF4A90E2),
+//                        containerColor = Color(0xFF4A90E2),
 //                        titleContentColor = Color.White,
 //                        navigationIconContentColor = Color.White
-//                    )
+//                    ),
+//                    // ✅ FIX: Use modifier.shadow() instead
+//                    modifier = Modifier.shadow(elevation = 8.dp)
 //                )
 //            }
 //        ) { innerPadding ->
@@ -270,7 +298,7 @@
 //        label = {
 //            Text(
 //                text,
-//                fontSize = 16.sp,
+//                fontSize = 14.sp,
 //                color = if (isDark) Color.White else Color.Black,
 //                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
 //            )
@@ -293,7 +321,7 @@
 //            selectedContainerColor = if (isDark) {
 //                Color(0xFF4A90E2).copy(alpha = 0.3f)
 //            } else {
-//                Color(0xFF4A90E2).copy(alpha = 0.2f)
+//                Color(0xFF4A90E2).copy(alpha = 0.15f)
 //            }
 //        ),
 //        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -311,9 +339,6 @@
 //}
 
 
-// ============================================
-// FILE: RecruiterMainScreen.kt (FINAL BEAUTIFUL VERSION)
-// ============================================
 package com.example.feature_recruiter
 
 import androidx.compose.foundation.background
@@ -341,6 +366,7 @@ import com.example.feature_recruiter.database.RecruiterDatabase
 import com.example.feature_recruiter.dialog.CompanySetupDialog
 import com.example.feature_recruiter.repository.RecruiterProfileRepository
 import com.example.feature_recruiter.repository.RecruiterResumeRepository
+import com.example.feature_recruiter.repository.SearchHistoryRepository
 import com.example.feature_recruiter.screens.*
 import com.example.feature_recruiter.util.DatabaseHelper
 import com.example.feature_recruiter.viewmodel.RecruiterProfileViewModel
@@ -358,19 +384,36 @@ fun RecruiterMainScreen(
     val userEmail = user.email ?: "Recruiter"
     val scope = rememberCoroutineScope()
 
-    // Initialize Database & ViewModels
-    val db = remember { DatabaseHelper.getDatabase(context) }
-    val resumeRepo = remember { RecruiterResumeRepository(db.recruiterResumeDao()) }
-    val profileRepo = remember { RecruiterProfileRepository(db.recruiterProfileDao()) }
-    val resumeViewModel = remember { RecruiterResumeViewModel(resumeRepo, userEmail) }
-    val profileViewModel = remember { RecruiterProfileViewModel(profileRepo, userEmail) }
+    // ✅ Initialize Database ONCE (no try-catch in composable)
+    val db = remember(context) {
+        DatabaseHelper.getDatabase(context)
+    }
+
+    // ✅ Initialize Repositories ONCE
+    val resumeRepo = remember(db) {
+        RecruiterResumeRepository(db.recruiterResumeDao())
+    }
+    val profileRepo = remember(db) {
+        RecruiterProfileRepository(db.recruiterProfileDao())
+    }
+    val searchHistoryRepo = remember(db) {
+        SearchHistoryRepository(db.searchHistoryDao())
+    }
+
+    // ✅ Initialize ViewModels ONCE
+    val resumeViewModel = remember(resumeRepo, searchHistoryRepo, userEmail) {
+        RecruiterResumeViewModel(resumeRepo, userEmail, searchHistoryRepo)
+    }
+    val profileViewModel = remember(profileRepo, userEmail) {
+        RecruiterProfileViewModel(profileRepo, userEmail)
+    }
 
     // UI State
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var selectedScreen by remember { mutableStateOf("dashboard") }
-    var showSetupDialog by remember { mutableStateOf(false) }
+    var currentTheme by remember { mutableStateOf(user.theme) }
 
-    val isDark = when (user.theme) {
+    val isDark = when (currentTheme) {
         "light" -> false
         "dark" -> true
         else -> isSystemInDarkTheme()
@@ -378,22 +421,19 @@ fun RecruiterMainScreen(
 
     // Check profile setup
     val profile by profileViewModel.profile.collectAsState()
-    LaunchedEffect(profile) {
-        if (profile == null) {
-            showSetupDialog = true
-        }
-    }
+    val showSetupDialog by profileViewModel.showSetupDialog.collectAsState()
+    val isLoading by profileViewModel.isLoading.collectAsState()
 
-    // Show company setup dialog on first login
+    // ✅ Show company setup dialog ONLY if setupCompleted is false
     if (showSetupDialog) {
         CompanySetupDialog(
             recruiterEmail = userEmail,
             onSetupComplete = { companyName, recruiterName ->
                 scope.launch {
                     profileViewModel.createInitialProfile(companyName, recruiterName)
-                    showSetupDialog = false
                 }
-            }
+            },
+            isLoading = isLoading
         )
     }
 
@@ -509,10 +549,10 @@ fun RecruiterMainScreen(
                     icon = Icons.Default.Settings,
                     text = "Settings",
                     isDark = isDark,
-                    isSelected = false
+                    isSelected = selectedScreen == "settings"
                 ) {
                     scope.launch { drawerState.close() }
-                    navController.navigate("recruiter_settings")
+                    selectedScreen = "settings"
                 }
 
                 DrawerItemRecruiter(
@@ -560,7 +600,6 @@ fun RecruiterMainScreen(
                         titleContentColor = Color.White,
                         navigationIconContentColor = Color.White
                     ),
-                    // ✅ FIX: Use modifier.shadow() instead
                     modifier = Modifier.shadow(elevation = 8.dp)
                 )
             }
@@ -592,6 +631,21 @@ fun RecruiterMainScreen(
                     isDark = isDark,
                     viewModel = resumeViewModel,
                     modifier = Modifier.padding(innerPadding)
+                )
+
+                "settings" -> RecruiterSettingsScreen(
+                    userEmail = userEmail,
+                    isDark = isDark,
+                    profileViewModel = profileViewModel,
+                    onThemeChange = { newTheme ->
+                        currentTheme = newTheme
+                        scope.launch {
+                            UserPreference.saveTheme(context, newTheme)
+                        }
+                    },
+                    onBack = {
+                        selectedScreen = "dashboard"
+                    }
                 )
             }
         }
@@ -646,6 +700,7 @@ fun getRecruiterScreenTitle(screen: String): String {
         "upload" -> "Upload Resumes"
         "filter" -> "Filter Candidates"
         "history" -> "History"
+        "settings" -> "Settings"
         else -> "Talent Hub"
     }
 }

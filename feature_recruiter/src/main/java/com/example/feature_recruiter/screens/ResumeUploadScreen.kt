@@ -1,286 +1,3 @@
-//package com.example.feature_recruiter.screens
-//
-//import androidx.compose.foundation.background
-//import androidx.compose.foundation.layout.*
-//import androidx.compose.foundation.lazy.LazyColumn
-//import androidx.compose.foundation.shape.RoundedCornerShape
-//import androidx.compose.material.icons.Icons
-//import androidx.compose.material.icons.filled.*
-//import androidx.compose.material3.*
-//import androidx.compose.runtime.*
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.draw.shadow
-//import androidx.compose.ui.graphics.Color
-//import androidx.compose.ui.text.font.FontWeight
-//import androidx.compose.ui.unit.dp
-//import androidx.compose.ui.unit.sp
-//import com.example.feature_recruiter.data.RecruiterResumeDatabase
-//import com.example.feature_recruiter.model.RecruiterResume
-//import java.util.*
-//
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun ResumeUploadScreenRecruiter(
-//    modifier: Modifier = Modifier,
-//    isDark: Boolean,
-//    onUploadSuccess: () -> Unit = {}
-//) {
-//    var candidateName by remember { mutableStateOf("") }
-//    var candidateEmail by remember { mutableStateOf("") }
-//    var experience by remember { mutableStateOf("0") }
-//    var techStackInput by remember { mutableStateOf("") }
-//    var fileName by remember { mutableStateOf("") }
-//    var showSuccessDialog by remember { mutableStateOf(false) }
-//    var errorMessage by remember { mutableStateOf<String?>(null) }
-//
-//    val snackbarHostState = remember { SnackbarHostState() }
-//
-//    fun validateInput(): Boolean {
-//        return when {
-//            candidateName.isBlank() -> {
-//                errorMessage = "Candidate name required"
-//                false
-//            }
-//            candidateEmail.isBlank() -> {
-//                errorMessage = "Email required"
-//                false
-//            }
-//            experience.toIntOrNull() == null -> {
-//                errorMessage = "Valid experience required"
-//                false
-//            }
-//            techStackInput.isBlank() -> {
-//                errorMessage = "Tech stack required"
-//                false
-//            }
-//            fileName.isBlank() -> {
-//                errorMessage = "File name required"
-//                false
-//            }
-//            else -> true
-//        }
-//    }
-//
-//    Scaffold(
-//        snackbarHost = { SnackbarHost(snackbarHostState) }
-//    ) { innerPadding ->
-//        LazyColumn(
-//            modifier = modifier
-//                .fillMaxSize()
-//                .background(
-//                    if (isDark) Color(0xFF121212) else Color(0xFFF5F6FA)
-//                )
-//                .padding(innerPadding)
-//                .padding(16.dp),
-//            verticalArrangement = Arrangement.spacedBy(16.dp)
-//        ) {
-//            item {
-//                Text(
-//                    "Add Candidate Resume",
-//                    fontSize = 24.sp,
-//                    fontWeight = FontWeight.Bold,
-//                    color = if (isDark) Color.White else Color.Black
-//                )
-//            }
-//
-//            item {
-//                Card(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .shadow(8.dp, RoundedCornerShape(16.dp)),
-//                    shape = RoundedCornerShape(16.dp),
-//                    colors = CardDefaults.cardColors(
-//                        containerColor = if (isDark) Color(0xFF1E1E2F) else Color.White
-//                    )
-//                ) {
-//                    Column(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(20.dp),
-//                        verticalArrangement = Arrangement.spacedBy(16.dp)
-//                    ) {
-//                        // Candidate Name
-//                        OutlinedTextField(
-//                            value = candidateName,
-//                            onValueChange = { candidateName = it },
-//                            label = { Text("Candidate Name") },
-//                            modifier = Modifier.fillMaxWidth(),
-//                            shape = RoundedCornerShape(12.dp),
-//                            colors = OutlinedTextFieldDefaults.colors(
-//                                focusedBorderColor = Color(0xFF4A90E2),
-//                                unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f),
-//                                focusedTextColor = if (isDark) Color.White else Color.Black,
-//                                unfocusedTextColor = if (isDark) Color.White else Color.Black
-//                            ),
-//                            leadingIcon = {
-//                                Icon(Icons.Default.Person, contentDescription = null)
-//                            }
-//                        )
-//
-//                        // Candidate Email
-//                        OutlinedTextField(
-//                            value = candidateEmail,
-//                            onValueChange = { candidateEmail = it },
-//                            label = { Text("Email Address") },
-//                            modifier = Modifier.fillMaxWidth(),
-//                            shape = RoundedCornerShape(12.dp),
-//                            colors = OutlinedTextFieldDefaults.colors(
-//                                focusedBorderColor = Color(0xFF4A90E2),
-//                                unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f),
-//                                focusedTextColor = if (isDark) Color.White else Color.Black,
-//                                unfocusedTextColor = if (isDark) Color.White else Color.Black
-//                            ),
-//                            leadingIcon = {
-//                                Icon(Icons.Default.Email, contentDescription = null)
-//                            }
-//                        )
-//
-//                        // Experience
-//                        OutlinedTextField(
-//                            value = experience,
-//                            onValueChange = { experience = it },
-//                            label = { Text("Experience (Years)") },
-//                            modifier = Modifier.fillMaxWidth(),
-//                            shape = RoundedCornerShape(12.dp),
-//                            colors = OutlinedTextFieldDefaults.colors(
-//                                focusedBorderColor = Color(0xFF4A90E2),
-//                                unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f),
-//                                focusedTextColor = if (isDark) Color.White else Color.Black,
-//                                unfocusedTextColor = if (isDark) Color.White else Color.Black
-//                            ),
-//                            leadingIcon = {
-//                                Icon(Icons.Default.WorkHistory, contentDescription = null)
-//                            }
-//                        )
-//
-//                        // Tech Stack (comma separated)
-//                        OutlinedTextField(
-//                            value = techStackInput,
-//                            onValueChange = { techStackInput = it },
-//                            label = { Text("Tech Stack (comma separated)") },
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .heightIn(min = 80.dp),
-//                            shape = RoundedCornerShape(12.dp),
-//                            colors = OutlinedTextFieldDefaults.colors(
-//                                focusedBorderColor = Color(0xFF4A90E2),
-//                                unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f),
-//                                focusedTextColor = if (isDark) Color.White else Color.Black,
-//                                unfocusedTextColor = if (isDark) Color.White else Color.Black
-//                            ),
-//                            placeholder = { Text("e.g., Kotlin, Java, Compose, Firebase") }
-//                        )
-//
-//                        // File Name
-//                        OutlinedTextField(
-//                            value = fileName,
-//                            onValueChange = { fileName = it },
-//                            label = { Text("Resume File Name") },
-//                            modifier = Modifier.fillMaxWidth(),
-//                            shape = RoundedCornerShape(12.dp),
-//                            colors = OutlinedTextFieldDefaults.colors(
-//                                focusedBorderColor = Color(0xFF4A90E2),
-//                                unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f),
-//                                focusedTextColor = if (isDark) Color.White else Color.Black,
-//                                unfocusedTextColor = if (isDark) Color.White else Color.Black
-//                            ),
-//                            leadingIcon = {
-//                                Icon(Icons.Default.FilePresent, contentDescription = null)
-//                            }
-//                        )
-//
-//                        // Error message display
-//                        if (errorMessage != null) {
-//                            Surface(
-//                                modifier = Modifier.fillMaxWidth(),
-//                                color = Color(0xFFFFEBEE),
-//                                shape = RoundedCornerShape(8.dp)
-//                            ) {
-//                                Row(
-//                                    modifier = Modifier
-//                                        .fillMaxWidth()
-//                                        .padding(12.dp),
-//                                    verticalAlignment = Alignment.CenterVertically
-//                                ) {
-//                                    Icon(
-//                                        Icons.Default.Error,
-//                                        contentDescription = null,
-//                                        tint = Color(0xFFC62828),
-//                                        modifier = Modifier.size(20.dp)
-//                                    )
-//                                    Spacer(Modifier.width(8.dp))
-//                                    Text(
-//                                        errorMessage ?: "",
-//                                        color = Color(0xFFC62828),
-//                                        fontSize = 12.sp
-//                                    )
-//                                }
-//                            }
-//                        }
-//
-//                        // Submit Button
-//                        Button(
-//                            onClick = {
-//                                if (validateInput()) {
-//                                    val resume = RecruiterResume(
-//                                        id = UUID.randomUUID().toString(),
-//                                        fileName = fileName,
-//                                        uploadedDate = System.currentTimeMillis(),
-//                                        techStack = techStackInput.split(",").map { it.trim() },
-//                                        candidateName = candidateName,
-//                                        candidateEmail = candidateEmail,
-//                                        experience = experience.toInt()
-//                                    )
-//                                    RecruiterResumeDatabase.addResume(resume)
-//                                    showSuccessDialog = true
-//                                    errorMessage = null
-//
-//                                    // Clear fields
-//                                    candidateName = ""
-//                                    candidateEmail = ""
-//                                    experience = "0"
-//                                    techStackInput = ""
-//                                    fileName = ""
-//                                }
-//                            },
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .height(54.dp)
-//                                .shadow(8.dp, RoundedCornerShape(12.dp)),
-//                            colors = ButtonDefaults.buttonColors(
-//                                containerColor = Color(0xFF4A90E2)
-//                            ),
-//                            shape = RoundedCornerShape(12.dp)
-//                        ) {
-//                            Icon(Icons.Default.Upload, contentDescription = null)
-//                            Spacer(Modifier.width(8.dp))
-//                            Text("Upload Resume", fontWeight = FontWeight.Bold)
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    // Success Dialog
-//    if (showSuccessDialog) {
-//        AlertDialog(
-//            onDismissRequest = { showSuccessDialog = false },
-//            title = { Text("Success!") },
-//            text = { Text("Resume uploaded successfully") },
-//            confirmButton = {
-//                Button(onClick = {
-//                    showSuccessDialog = false
-//                    onUploadSuccess()
-//                }) {
-//                    Text("OK")
-//                }
-//            }
-//        )
-//    }
-//}
-
 //
 //package com.example.feature_recruiter.screens
 //
@@ -308,7 +25,7 @@
 //import com.example.feature_recruiter.util.TechStackExtractor
 //import com.example.feature_recruiter.viewmodel.RecruiterResumeViewModel
 //import kotlinx.coroutines.Dispatchers
-//import kotlinx.coroutines.withContext
+//import kotlinx.coroutines.launch
 //import java.util.*
 //
 //@OptIn(ExperimentalMaterial3Api::class)
@@ -321,76 +38,118 @@
 //    modifier: Modifier = Modifier
 //) {
 //    val context = LocalContext.current
+//    val scope = rememberCoroutineScope()
+//
 //    var selectedFileName by remember { mutableStateOf("") }
 //    var candidateName by remember { mutableStateOf("") }
 //    var candidateEmail by remember { mutableStateOf("") }
 //    var experience by remember { mutableStateOf("0") }
+//    var extractedTechStack by remember { mutableStateOf<List<String>>(emptyList()) }
 //    var errorMessage by remember { mutableStateOf<String?>(null) }
+//    var isProcessing by remember { mutableStateOf(false) }
 //    var uploadProgress by remember { mutableStateOf(0f) }
-//    var isUploading by remember { mutableStateOf(false) }
 //    var showSuccessDialog by remember { mutableStateOf(false) }
 //
 //    val snackbarHostState = remember { SnackbarHostState() }
 //
-//    // File Picker - Single file
+//    // Single File Picker
 //    val singleFilePicker = rememberLauncherForActivityResult(
 //        contract = ActivityResultContracts.GetContent()
 //    ) { uri ->
 //        if (uri != null) {
 //            selectedFileName = FileUtils.getFileNameFromUri(context, uri)
 //            errorMessage = null
+//            isProcessing = true
+//            uploadProgress = 0f
+//
+//            scope.launch(Dispatchers.Default) {
+//                try {
+//                    // Attempt to extract text from PDF
+//                    val pdfText = PDFParser.extractTextFromPDF(context, uri.toString())
+//
+//                    // Extract tech stack from PDF content
+//                    extractedTechStack = if (pdfText.isNotEmpty()) {
+//                        TechStackExtractor.extractTechStack(pdfText)
+//                    } else {
+//                        emptyList()
+//                    }
+//
+//                    // Extract candidate info from filename
+//                    candidateName = extractCandidateName(selectedFileName)
+//                    experience = extractExperienceFromFileName(selectedFileName).toString()
+//
+//                    uploadProgress = 1f
+//                } catch (e: Exception) {
+//                    e.printStackTrace()
+//                    errorMessage = "Error processing file: ${e.message}"
+//                }
+//                isProcessing = false
+//            }
 //        }
 //    }
 //
-//    // Folder Picker - Multiple files
-//    val folderPicker = rememberLauncherForActivityResult(
+//    // Batch Upload - Multiple Files
+//    val batchUploadPicker = rememberLauncherForActivityResult(
 //        contract = ActivityResultContracts.OpenMultipleDocuments()
 //    ) { uris ->
 //        if (uris.isNotEmpty()) {
-//            isUploading = true
+//            isProcessing = true
 //            uploadProgress = 0f
 //
-//            val resumes = mutableListOf<RecruiterResumeEntity>()
-//            val totalFiles = uris.size
-//
-//            uris.forEachIndexed { index, uri ->
+//            scope.launch(Dispatchers.Default) {
 //                try {
-//                    val fileName = FileUtils.getFileNameFromUri(context, uri)
-//                    val text = if (FileUtils.isPDFFile(fileName)) {
-//                        // For demo, we'll use filename-based extraction
-//                        extractInfoFromFileName(fileName)
-//                    } else {
-//                        ""
+//                    val resumes = mutableListOf<RecruiterResumeEntity>()
+//                    val totalFiles = uris.size
+//
+//                    uris.forEachIndexed { index, uri ->
+//                        try {
+//                            val fileName = FileUtils.getFileNameFromUri(context, uri)
+//
+//                            // Extract text from PDF
+//                            val pdfText = if (FileUtils.isPDFFile(fileName)) {
+//                                PDFParser.extractTextFromPDF(context, uri.toString())
+//                            } else {
+//                                ""
+//                            }
+//
+//                            // Extract tech stack
+//                            val techs = if (pdfText.isNotEmpty()) {
+//                                TechStackExtractor.extractTechStack(pdfText)
+//                            } else {
+//                                emptyList()
+//                            }
+//
+//                            val resume = RecruiterResumeEntity(
+//                                resumeId = UUID.randomUUID().toString(),
+//                                fileName = fileName,
+//                                candidateName = extractCandidateName(fileName),
+//                                candidateEmail = extractEmailFromFileName(fileName),
+//                                experience = extractExperienceFromFileName(fileName),
+//                                techStack = techs.joinToString(", "),
+//                                rawText = pdfText,
+//                                uploadedDate = System.currentTimeMillis(),
+//                                recruiterEmail = recruiterEmail
+//                            )
+//                            resumes.add(resume)
+//
+//                            uploadProgress = (index + 1).toFloat() / totalFiles
+//                        } catch (e: Exception) {
+//                            e.printStackTrace()
+//                        }
 //                    }
 //
-//                    val techs = TechStackExtractor.extractTechStack(text)
-//
-//                    val resume = RecruiterResumeEntity(
-//                        resumeId = UUID.randomUUID().toString(),
-//                        fileName = fileName,
-//                        candidateName = extractCandidateName(fileName),
-//                        candidateEmail = "candidate@example.com",
-//                        experience = extractExperienceFromFileName(fileName),
-//                        techStack = techs.joinToString(", "),
-//                        rawText = text,
-//                        uploadedDate = System.currentTimeMillis(),
-//                        recruiterEmail = recruiterEmail
-//                    )
-//                    resumes.add(resume)
-//
-//                    uploadProgress = (index + 1).toFloat() / totalFiles
+//                    if (resumes.isNotEmpty()) {
+//                        viewModel.insertMultipleResumes(resumes)
+//                        showSuccessDialog = true
+//                    } else {
+//                        errorMessage = "No valid resumes found"
+//                    }
 //                } catch (e: Exception) {
 //                    e.printStackTrace()
+//                    errorMessage = "Upload failed: ${e.message}"
 //                }
+//                isProcessing = false
 //            }
-//
-//            if (resumes.isNotEmpty()) {
-//                viewModel.insertMultipleResumes(resumes)
-//                showSuccessDialog = true
-//            } else {
-//                errorMessage = "No valid resumes found"
-//            }
-//            isUploading = false
 //        }
 //    }
 //
@@ -442,6 +201,7 @@
 //                        // Single Upload Button
 //                        Button(
 //                            onClick = { singleFilePicker.launch("application/pdf") },
+//                            enabled = !isProcessing,
 //                            modifier = Modifier
 //                                .fillMaxWidth()
 //                                .height(48.dp),
@@ -459,7 +219,8 @@
 //
 //                        // Batch Upload Button
 //                        Button(
-//                            onClick = { folderPicker.launch(arrayOf("application/pdf")) },
+//                            onClick = { batchUploadPicker.launch(arrayOf("application/pdf")) },
+//                            enabled = !isProcessing,
 //                            modifier = Modifier
 //                                .fillMaxWidth()
 //                                .height(48.dp),
@@ -470,7 +231,7 @@
 //                        ) {
 //                            Icon(Icons.Default.FolderOpen, contentDescription = null)
 //                            Spacer(Modifier.width(8.dp))
-//                            Text("Upload Folder")
+//                            Text("Upload Multiple Resumes")
 //                        }
 //                    }
 //                }
@@ -521,7 +282,13 @@
 //                                    )
 //                                }
 //                            }
-//                            IconButton(onClick = { selectedFileName = "" }) {
+//                            IconButton(onClick = {
+//                                selectedFileName = ""
+//                                extractedTechStack = emptyList()
+//                                candidateName = ""
+//                                candidateEmail = ""
+//                                experience = "0"
+//                            }) {
 //                                Icon(Icons.Default.Close, contentDescription = "Remove")
 //                            }
 //                        }
@@ -529,8 +296,72 @@
 //                }
 //            }
 //
-//            // Manual Info Entry (for single upload)
-//            if (selectedFileName.isNotEmpty()) {
+//            // Processing State
+//            if (isProcessing) {
+//                item {
+//                    Card(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        shape = RoundedCornerShape(12.dp)
+//                    ) {
+//                        Column(modifier = Modifier.padding(16.dp)) {
+//                            Text(
+//                                "Processing: ${(uploadProgress * 100).toInt()}%",
+//                                fontSize = 14.sp,
+//                                fontWeight = FontWeight.Bold
+//                            )
+//                            Spacer(modifier = Modifier.height(8.dp))
+//                            LinearProgressIndicator(
+//                                progress = uploadProgress,
+//                                modifier = Modifier.fillMaxWidth()
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//
+//            // Extracted Tech Stack
+//            if (extractedTechStack.isNotEmpty()) {
+//                item {
+//                    Card(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        shape = RoundedCornerShape(12.dp),
+//                        colors = CardDefaults.cardColors(
+//                            containerColor = if (isDark) Color(0xFF1E1E2F) else Color.White
+//                        )
+//                    ) {
+//                        Column(modifier = Modifier.padding(16.dp)) {
+//                            Text(
+//                                "Detected Technologies",
+//                                fontSize = 14.sp,
+//                                fontWeight = FontWeight.Bold,
+//                                color = if (isDark) Color.White else Color.Black
+//                            )
+//                            Spacer(modifier = Modifier.height(8.dp))
+//                            FlowRow(
+//                                modifier = Modifier.fillMaxWidth(),
+//                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+//                            ) {
+//                                extractedTechStack.forEach { tech ->
+//                                    Surface(
+//                                        shape = RoundedCornerShape(8.dp),
+//                                        color = Color(0xFF4A90E2).copy(alpha = 0.2f)
+//                                    ) {
+//                                        Text(
+//                                            tech,
+//                                            modifier = Modifier.padding(8.dp, 4.dp),
+//                                            fontSize = 12.sp,
+//                                            color = Color(0xFF4A90E2)
+//                                        )
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//            // Manual Info Entry
+//            if (selectedFileName.isNotEmpty() && !isProcessing) {
 //                item {
 //                    Card(
 //                        modifier = Modifier
@@ -588,6 +419,42 @@
 //                                    unfocusedTextColor = if (isDark) Color.White else Color.Black
 //                                )
 //                            )
+//
+//                            // Upload Button
+//                            Button(
+//                                onClick = {
+//                                    if (candidateName.isBlank() || candidateEmail.isBlank()) {
+//                                        errorMessage = "Please fill all fields"
+//                                        return@Button
+//                                    }
+//
+//                                    val resume = RecruiterResumeEntity(
+//                                        resumeId = UUID.randomUUID().toString(),
+//                                        fileName = selectedFileName,
+//                                        candidateName = candidateName,
+//                                        candidateEmail = candidateEmail,
+//                                        experience = experience.toIntOrNull() ?: 0,
+//                                        techStack = extractedTechStack.joinToString(", "),
+//                                        rawText = "",
+//                                        uploadedDate = System.currentTimeMillis(),
+//                                        recruiterEmail = recruiterEmail
+//                                    )
+//
+//                                    viewModel.insertResume(resume)
+//                                    showSuccessDialog = true
+//                                },
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .height(54.dp),
+//                                colors = ButtonDefaults.buttonColors(
+//                                    containerColor = Color(0xFF4A90E2)
+//                                ),
+//                                shape = RoundedCornerShape(12.dp)
+//                            ) {
+//                                Icon(Icons.Default.Upload, contentDescription = null)
+//                                Spacer(Modifier.width(8.dp))
+//                                Text("Upload Resume", fontWeight = FontWeight.Bold)
+//                            }
 //                        }
 //                    }
 //                }
@@ -623,29 +490,6 @@
 //                    }
 //                }
 //            }
-//
-//            // Upload Progress
-//            if (isUploading && uploadProgress > 0f) {
-//                item {
-//                    Card(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        shape = RoundedCornerShape(12.dp)
-//                    ) {
-//                        Column(modifier = Modifier.padding(16.dp)) {
-//                            Text(
-//                                "Uploading: ${(uploadProgress * 100).toInt()}%",
-//                                fontSize = 14.sp,
-//                                fontWeight = FontWeight.Bold
-//                            )
-//                            Spacer(modifier = Modifier.height(8.dp))
-//                            LinearProgressIndicator(
-//                                progress = uploadProgress,
-//                                modifier = Modifier.fillMaxWidth()
-//                            )
-//                        }
-//                    }
-//                }
-//            }
 //        }
 //    }
 //
@@ -654,7 +498,7 @@
 //        AlertDialog(
 //            onDismissRequest = { showSuccessDialog = false },
 //            title = { Text("Success!") },
-//            text = { Text("Resumes uploaded successfully") },
+//            text = { Text("Resume uploaded successfully") },
 //            confirmButton = {
 //                Button(onClick = {
 //                    showSuccessDialog = false
@@ -662,6 +506,7 @@
 //                    candidateName = ""
 //                    candidateEmail = ""
 //                    experience = "0"
+//                    extractedTechStack = emptyList()
 //                    onUploadSuccess()
 //                }) {
 //                    Text("OK")
@@ -672,29 +517,33 @@
 //}
 //
 //// Helper functions
-//private fun extractInfoFromFileName(fileName: String): String {
-//    // Extract info from filename like "John_5y_Kotlin_Java"
-//    return fileName.replace("_", " ").replace(".pdf", "")
-//}
-//
 //private fun extractCandidateName(fileName: String): String {
 //    val name = fileName.split("_").firstOrNull() ?: fileName
-//    return name.replace(".pdf", "")
+//    return name.replace(".pdf", "").replace("-", " ")
+//}
+//
+//private fun extractEmailFromFileName(fileName: String): String {
+//    // Try to extract email from filename like "john_doe_john@email.com.pdf"
+//    val parts = fileName.split("_", "-")
+//    for (part in parts) {
+//        if (part.contains("@")) {
+//            return part.replace(".pdf", "")
+//        }
+//    }
+//    return "candidate@example.com"
 //}
 //
 //private fun extractExperienceFromFileName(fileName: String): Int {
-//    val parts = fileName.split("_")
+//    // Try to extract years like "5y" from filename
+//    val parts = fileName.split("_", "-", ".")
 //    for (part in parts) {
-//        val years = part.replace("y", "").toIntOrNull()
-//        if (years != null) return years
+//        val years = part.replace("y", "").replace("Y", "").toIntOrNull()
+//        if (years != null && years > 0) return years
 //    }
 //    return 0
 //}
 
 
-// ============================================
-// FILE 16: screens/ResumeUploadScreen.kt (SIMPLIFIED)
-// ============================================
 package com.example.feature_recruiter.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -702,6 +551,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -736,15 +586,12 @@ fun ResumeUploadScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var selectedFileName by remember { mutableStateOf("") }
-    var candidateName by remember { mutableStateOf("") }
-    var candidateEmail by remember { mutableStateOf("") }
-    var experience by remember { mutableStateOf("0") }
-    var extractedTechStack by remember { mutableStateOf<List<String>>(emptyList()) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var uploadMode by remember { mutableStateOf<UploadMode?>(null) }
+    var selectedFiles by remember { mutableStateOf<List<SelectedFile>>(emptyList()) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
     var isProcessing by remember { mutableStateOf(false) }
     var uploadProgress by remember { mutableStateOf(0f) }
-    var showSuccessDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -753,96 +600,95 @@ fun ResumeUploadScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
-            selectedFileName = FileUtils.getFileNameFromUri(context, uri)
-            errorMessage = null
+            val fileName = FileUtils.getFileNameFromUri(context, uri)
             isProcessing = true
             uploadProgress = 0f
+            errorMessage = null
 
             scope.launch(Dispatchers.Default) {
                 try {
-                    // Attempt to extract text from PDF
                     val pdfText = PDFParser.extractTextFromPDF(context, uri.toString())
-
-                    // Extract tech stack from PDF content
-                    extractedTechStack = if (pdfText.isNotEmpty()) {
+                    val techStack = if (pdfText.isNotEmpty()) {
                         TechStackExtractor.extractTechStack(pdfText)
                     } else {
                         emptyList()
                     }
 
-                    // Extract candidate info from filename
-                    candidateName = extractCandidateName(selectedFileName)
-                    experience = extractExperienceFromFileName(selectedFileName).toString()
+                    val candidateName = extractCandidateName(fileName)
+                    val experience = extractExperienceFromFileName(fileName)
 
+                    selectedFiles = listOf(
+                        SelectedFile(
+                            uri = uri,
+                            fileName = fileName,
+                            candidateName = candidateName,
+                            candidateEmail = extractEmailFromFileName(fileName),
+                            experience = experience,
+                            detectedTechStack = techStack,
+                            extractedText = pdfText
+                        )
+                    )
                     uploadProgress = 1f
                 } catch (e: Exception) {
                     e.printStackTrace()
                     errorMessage = "Error processing file: ${e.message}"
+                    selectedFiles = emptyList()
                 }
                 isProcessing = false
             }
         }
     }
 
-    // Batch Upload - Multiple Files
-    val batchUploadPicker = rememberLauncherForActivityResult(
+    // Multiple Files Picker
+    val multipleFilePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
         if (uris.isNotEmpty()) {
             isProcessing = true
             uploadProgress = 0f
+            errorMessage = null
 
             scope.launch(Dispatchers.Default) {
                 try {
-                    val resumes = mutableListOf<RecruiterResumeEntity>()
+                    val files = mutableListOf<SelectedFile>()
                     val totalFiles = uris.size
 
                     uris.forEachIndexed { index, uri ->
                         try {
                             val fileName = FileUtils.getFileNameFromUri(context, uri)
 
-                            // Extract text from PDF
                             val pdfText = if (FileUtils.isPDFFile(fileName)) {
                                 PDFParser.extractTextFromPDF(context, uri.toString())
                             } else {
                                 ""
                             }
 
-                            // Extract tech stack
-                            val techs = if (pdfText.isNotEmpty()) {
+                            val techStack = if (pdfText.isNotEmpty()) {
                                 TechStackExtractor.extractTechStack(pdfText)
                             } else {
                                 emptyList()
                             }
 
-                            val resume = RecruiterResumeEntity(
-                                resumeId = UUID.randomUUID().toString(),
+                            val file = SelectedFile(
+                                uri = uri,
                                 fileName = fileName,
                                 candidateName = extractCandidateName(fileName),
                                 candidateEmail = extractEmailFromFileName(fileName),
                                 experience = extractExperienceFromFileName(fileName),
-                                techStack = techs.joinToString(", "),
-                                rawText = pdfText,
-                                uploadedDate = System.currentTimeMillis(),
-                                recruiterEmail = recruiterEmail
+                                detectedTechStack = techStack,
+                                extractedText = pdfText
                             )
-                            resumes.add(resume)
-
+                            files.add(file)
                             uploadProgress = (index + 1).toFloat() / totalFiles
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
                     }
 
-                    if (resumes.isNotEmpty()) {
-                        viewModel.insertMultipleResumes(resumes)
-                        showSuccessDialog = true
-                    } else {
-                        errorMessage = "No valid resumes found"
-                    }
+                    selectedFiles = files
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    errorMessage = "Upload failed: ${e.message}"
+                    errorMessage = "Error processing files: ${e.message}"
                 }
                 isProcessing = false
             }
@@ -874,190 +720,8 @@ fun ResumeUploadScreen(
                 )
             }
 
-            // Upload Mode Selection
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(8.dp, RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isDark) Color(0xFF1E1E2F) else Color.White
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            "Upload Mode",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (isDark) Color.White else Color.Black
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Single Upload Button
-                        Button(
-                            onClick = { singleFilePicker.launch("application/pdf") },
-                            enabled = !isProcessing,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF4A90E2)
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.Upload, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Upload Single Resume")
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Batch Upload Button
-                        Button(
-                            onClick = { batchUploadPicker.launch(arrayOf("application/pdf")) },
-                            enabled = !isProcessing,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFFFA726)
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.FolderOpen, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Upload Multiple Resumes")
-                        }
-                    }
-                }
-            }
-
-            // Selected File Info
-            if (selectedFileName.isNotEmpty()) {
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(6.dp, RoundedCornerShape(12.dp)),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isDark) Color(0xFF1E1E2F) else Color.White
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(
-                                modifier = Modifier.weight(1f),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.FilePresent,
-                                    contentDescription = null,
-                                    tint = Color(0xFF4A90E2),
-                                    modifier = Modifier.size(32.dp)
-                                )
-                                Column {
-                                    Text(
-                                        selectedFileName,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isDark) Color.White else Color.Black,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        "PDF Document",
-                                        fontSize = 12.sp,
-                                        color = Color.Gray
-                                    )
-                                }
-                            }
-                            IconButton(onClick = {
-                                selectedFileName = ""
-                                extractedTechStack = emptyList()
-                                candidateName = ""
-                                candidateEmail = ""
-                                experience = "0"
-                            }) {
-                                Icon(Icons.Default.Close, contentDescription = "Remove")
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Processing State
-            if (isProcessing) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                "Processing: ${(uploadProgress * 100).toInt()}%",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            LinearProgressIndicator(
-                                progress = uploadProgress,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Extracted Tech Stack
-            if (extractedTechStack.isNotEmpty()) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isDark) Color(0xFF1E1E2F) else Color.White
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                "Detected Technologies",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isDark) Color.White else Color.Black
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            FlowRow(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                extractedTechStack.forEach { tech ->
-                                    Surface(
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = Color(0xFF4A90E2).copy(alpha = 0.2f)
-                                    ) {
-                                        Text(
-                                            tech,
-                                            modifier = Modifier.padding(8.dp, 4.dp),
-                                            fontSize = 12.sp,
-                                            color = Color(0xFF4A90E2)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Manual Info Entry
-            if (selectedFileName.isNotEmpty() && !isProcessing) {
+            // Upload Mode Selection (Show only if no files selected)
+            if (selectedFiles.isEmpty() && uploadMode == null) {
                 item {
                     Card(
                         modifier = Modifier
@@ -1065,92 +729,88 @@ fun ResumeUploadScreen(
                             .shadow(8.dp, RoundedCornerShape(16.dp)),
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (isDark) Color(0xFF1E1E2F) else Color.White
+                            containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
                         )
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = candidateName,
-                                onValueChange = { candidateName = it },
-                                label = { Text("Candidate Name") },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF4A90E2),
-                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f),
-                                    focusedTextColor = if (isDark) Color.White else Color.Black,
-                                    unfocusedTextColor = if (isDark) Color.White else Color.Black
-                                )
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Text(
+                                "Upload Mode",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isDark) Color.White else Color.Black
                             )
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                            OutlinedTextField(
-                                value = candidateEmail,
-                                onValueChange = { candidateEmail = it },
-                                label = { Text("Email Address") },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF4A90E2),
-                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f),
-                                    focusedTextColor = if (isDark) Color.White else Color.Black,
-                                    unfocusedTextColor = if (isDark) Color.White else Color.Black
-                                )
-                            )
-
-                            OutlinedTextField(
-                                value = experience,
-                                onValueChange = { experience = it },
-                                label = { Text("Experience (Years)") },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF4A90E2),
-                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f),
-                                    focusedTextColor = if (isDark) Color.White else Color.Black,
-                                    unfocusedTextColor = if (isDark) Color.White else Color.Black
-                                )
-                            )
-
-                            // Upload Button
                             Button(
                                 onClick = {
-                                    if (candidateName.isBlank() || candidateEmail.isBlank()) {
-                                        errorMessage = "Please fill all fields"
-                                        return@Button
-                                    }
-
-                                    val resume = RecruiterResumeEntity(
-                                        resumeId = UUID.randomUUID().toString(),
-                                        fileName = selectedFileName,
-                                        candidateName = candidateName,
-                                        candidateEmail = candidateEmail,
-                                        experience = experience.toIntOrNull() ?: 0,
-                                        techStack = extractedTechStack.joinToString(", "),
-                                        rawText = "",
-                                        uploadedDate = System.currentTimeMillis(),
-                                        recruiterEmail = recruiterEmail
-                                    )
-
-                                    viewModel.insertResume(resume)
-                                    showSuccessDialog = true
+                                    uploadMode = UploadMode.SINGLE
+                                    singleFilePicker.launch("application/pdf")
                                 },
+                                enabled = !isProcessing,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(54.dp),
+                                    .height(56.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFF4A90E2)
                                 ),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Icon(Icons.Default.Upload, contentDescription = null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Upload Resume", fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.width(12.dp))
+                                Text("📄 Upload Single Resume", fontWeight = FontWeight.Bold)
                             }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Button(
+                                onClick = {
+                                    uploadMode = UploadMode.MULTIPLE
+                                    multipleFilePicker.launch(arrayOf("application/pdf"))
+                                },
+                                enabled = !isProcessing,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFFFA726)
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.FolderOpen, contentDescription = null)
+                                Spacer(Modifier.width(12.dp))
+                                Text("📁 Upload Multiple Resumes", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Processing Indicator
+            if (isProcessing) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Text(
+                                "Processing: ${(uploadProgress * 100).toInt()}%",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) Color.White else Color.Black
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            LinearProgressIndicator(
+                                progress = uploadProgress,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp),
+                                color = Color(0xFF4A90E2),
+                                trackColor = Color.Gray.copy(alpha = 0.2f)
+                            )
                         }
                     }
                 }
@@ -1160,7 +820,9 @@ fun ResumeUploadScreen(
             if (errorMessage != null) {
                 item {
                     Surface(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(4.dp, RoundedCornerShape(8.dp)),
                         color = Color(0xFFFFEBEE),
                         shape = RoundedCornerShape(8.dp)
                     ) {
@@ -1168,7 +830,8 @@ fun ResumeUploadScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Icon(
                                 Icons.Default.Error,
@@ -1176,16 +839,133 @@ fun ResumeUploadScreen(
                                 tint = Color(0xFFC62828),
                                 modifier = Modifier.size(20.dp)
                             )
-                            Spacer(Modifier.width(8.dp))
                             Text(
                                 errorMessage ?: "",
                                 color = Color(0xFFC62828),
                                 fontSize = 12.sp
                             )
+                            Spacer(modifier = Modifier.weight(1f))
+                            IconButton(onClick = { errorMessage = null }, modifier = Modifier.size(24.dp)) {
+                                Icon(Icons.Default.Close, contentDescription = null)
+                            }
                         }
                     }
                 }
             }
+
+            // Selected Files List
+            if (selectedFiles.isNotEmpty()) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Selected Files: ${selectedFiles.size}",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDark) Color.White else Color.Black
+                        )
+                        Button(
+                            onClick = {
+                                selectedFiles = emptyList()
+                                uploadMode = null
+                                errorMessage = null
+                            },
+                            modifier = Modifier.height(36.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE0E0E0)),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Clear", color = Color.Black, fontSize = 12.sp)
+                        }
+                    }
+                }
+
+                items(selectedFiles) { file ->
+                    UploadFileCard(file, isDark)
+                }
+            }
+
+            // Upload Button (for single resume with details form)
+            if (selectedFiles.size == 1 && uploadMode == UploadMode.SINGLE) {
+                item {
+                    UploadSingleResumeForm(
+                        file = selectedFiles[0],
+                        isDark = isDark,
+                        recruiterEmail = recruiterEmail,
+                        viewModel = viewModel,
+                        onUploadSuccess = {
+                            showSuccessDialog = true
+                            selectedFiles = emptyList()
+                            uploadMode = null
+                        }
+                    )
+                }
+            }
+
+            // Upload Button (for multiple resumes)
+            if (selectedFiles.size > 1) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(6.dp, RoundedCornerShape(12.dp)),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                "Ready to upload ${selectedFiles.size} resumes?",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) Color.White else Color.Black
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(
+                                onClick = {
+                                    scope.launch {
+                                        val resumes = selectedFiles.map { file ->
+                                            RecruiterResumeEntity(
+                                                resumeId = UUID.randomUUID().toString(),
+                                                fileName = file.fileName,
+                                                candidateName = file.candidateName,
+                                                candidateEmail = file.candidateEmail,
+                                                experience = file.experience,
+                                                techStack = file.detectedTechStack.joinToString(", "),
+                                                rawText = file.extractedText,
+                                                uploadedDate = System.currentTimeMillis(),
+                                                recruiterEmail = recruiterEmail
+                                            )
+                                        }
+                                        viewModel.insertMultipleResumes(resumes)
+                                        showSuccessDialog = true
+                                        selectedFiles = emptyList()
+                                        uploadMode = null
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF4A90E2)
+                                ),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Icon(Icons.Default.Upload, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Upload All Resumes", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 
@@ -1193,16 +973,19 @@ fun ResumeUploadScreen(
     if (showSuccessDialog) {
         AlertDialog(
             onDismissRequest = { showSuccessDialog = false },
-            title = { Text("Success!") },
-            text = { Text("Resume uploaded successfully") },
+            icon = {
+                Icon(
+                    Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = Color(0xFF4CAF50),
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            title = { Text("Success! 🎉") },
+            text = { Text("Resume(s) uploaded successfully") },
             confirmButton = {
                 Button(onClick = {
                     showSuccessDialog = false
-                    selectedFileName = ""
-                    candidateName = ""
-                    candidateEmail = ""
-                    experience = "0"
-                    extractedTechStack = emptyList()
                     onUploadSuccess()
                 }) {
                     Text("OK")
@@ -1212,14 +995,217 @@ fun ResumeUploadScreen(
     }
 }
 
-// Helper functions
+@Composable
+fun UploadFileCard(file: SelectedFile, isDark: Boolean) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(4.dp, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    Icons.Default.FilePresent,
+                    contentDescription = null,
+                    tint = Color(0xFF4A90E2),
+                    modifier = Modifier.size(32.dp)
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        file.fileName,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDark) Color.White else Color.Black,
+                        maxLines = 1
+                    )
+                    Text(
+                        file.candidateName,
+                        fontSize = 12.sp,
+                        color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (file.detectedTechStack.isNotEmpty()) {
+                Text(
+                    "Detected Tech Stack:",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (isDark) Color.White else Color.Black
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    file.detectedTechStack.forEach { tech ->
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0xFF4A90E2).copy(alpha = 0.2f)
+                        ) {
+                            Text(
+                                tech,
+                                modifier = Modifier.padding(6.dp, 3.dp),
+                                fontSize = 11.sp,
+                                color = Color(0xFF4A90E2),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "Experience: ${file.experience} years",
+                fontSize = 11.sp,
+                color = if (isDark) Color.White.copy(0.5f) else Color.Gray
+            )
+        }
+    }
+}
+
+@Composable
+fun UploadSingleResumeForm(
+    file: SelectedFile,
+    isDark: Boolean,
+    recruiterEmail: String,
+    viewModel: RecruiterResumeViewModel,
+    onUploadSuccess: () -> Unit
+) {
+    var candidateName by remember { mutableStateOf(file.candidateName) }
+    var candidateEmail by remember { mutableStateOf(file.candidateEmail) }
+    var experience by remember { mutableStateOf(file.experience.toString()) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(8.dp, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                "Complete Resume Details",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isDark) Color.White else Color.Black
+            )
+
+            OutlinedTextField(
+                value = candidateName,
+                onValueChange = { candidateName = it },
+                label = { Text("Candidate Name") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4A90E2),
+                    unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f),
+                    focusedTextColor = if (isDark) Color.White else Color.Black,
+                    unfocusedTextColor = if (isDark) Color.White else Color.Black
+                )
+            )
+
+            OutlinedTextField(
+                value = candidateEmail,
+                onValueChange = { candidateEmail = it },
+                label = { Text("Email Address") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4A90E2),
+                    unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f),
+                    focusedTextColor = if (isDark) Color.White else Color.Black,
+                    unfocusedTextColor = if (isDark) Color.White else Color.Black
+                )
+            )
+
+            OutlinedTextField(
+                value = experience,
+                onValueChange = { experience = it },
+                label = { Text("Experience (Years)") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4A90E2),
+                    unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f),
+                    focusedTextColor = if (isDark) Color.White else Color.Black,
+                    unfocusedTextColor = if (isDark) Color.White else Color.Black
+                )
+            )
+
+            Button(
+                onClick = {
+                    if (candidateName.isBlank() || candidateEmail.isBlank()) {
+                        return@Button
+                    }
+
+                    val resume = RecruiterResumeEntity(
+                        resumeId = UUID.randomUUID().toString(),
+                        fileName = file.fileName,
+                        candidateName = candidateName,
+                        candidateEmail = candidateEmail,
+                        experience = experience.toIntOrNull() ?: 0,
+                        techStack = file.detectedTechStack.joinToString(", "),
+                        rawText = file.extractedText,
+                        uploadedDate = System.currentTimeMillis(),
+                        recruiterEmail = recruiterEmail
+                    )
+
+                    viewModel.insertResume(resume)
+                    onUploadSuccess()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4A90E2)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Default.Upload, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Upload Resume", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
+        }
+    }
+}
+
+enum class UploadMode {
+    SINGLE, MULTIPLE
+}
+
+data class SelectedFile(
+    val uri: android.net.Uri,
+    val fileName: String,
+    val candidateName: String,
+    val candidateEmail: String,
+    val experience: Int,
+    val detectedTechStack: List<String>,
+    val extractedText: String
+)
+
+// Helper Functions
 private fun extractCandidateName(fileName: String): String {
     val name = fileName.split("_").firstOrNull() ?: fileName
     return name.replace(".pdf", "").replace("-", " ")
 }
 
 private fun extractEmailFromFileName(fileName: String): String {
-    // Try to extract email from filename like "john_doe_john@email.com.pdf"
     val parts = fileName.split("_", "-")
     for (part in parts) {
         if (part.contains("@")) {
@@ -1230,7 +1216,6 @@ private fun extractEmailFromFileName(fileName: String): String {
 }
 
 private fun extractExperienceFromFileName(fileName: String): Int {
-    // Try to extract years like "5y" from filename
     val parts = fileName.split("_", "-", ".")
     for (part in parts) {
         val years = part.replace("y", "").replace("Y", "").toIntOrNull()

@@ -17,10 +17,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.feature_recruiter.database.entity.RecruiterResumeEntity
+import com.example.feature_recruiter.database.entity.SearchHistoryEntity
 import com.example.feature_recruiter.viewmodel.RecruiterResumeViewModel
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.String
 
 @Composable
 fun RecruiterHistoryScreen(
@@ -29,8 +29,10 @@ fun RecruiterHistoryScreen(
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    var selectedTab by remember { mutableStateOf(0) }  // 0 = Resumes, 1 = Search History
 
     val allResumes by viewModel.allResumes.collectAsState()
+    val searchHistory by viewModel.searchHistory.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
     val filteredResumes = if (searchQuery.isBlank()) {
@@ -52,78 +54,162 @@ fun RecruiterHistoryScreen(
     ) {
         item {
             Text(
-                "Upload History",
+                "History",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (isDark) Color.White else Color.Black
             )
         }
 
-        // Search Bar
+        // Tab Row
         item {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Search by name, email, or tech") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                trailingIcon = if (searchQuery.isNotEmpty()) {
-                    {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Default.Close, contentDescription = "Clear")
+            TabRow(
+                selectedTabIndex = selectedTab,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp)),
+                containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White,
+                indicator = { }
+            ) {
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = { Text("📄 Resumes (${allResumes.size})") },
+                    selectedContentColor = Color.White,
+                    unselectedContentColor = if (isDark) Color.White.copy(0.6f) else Color.Gray,
+                    modifier = if (selectedTab == 0) {
+                        Modifier.background(Color(0xFF4A90E2))
+                    } else {
+                        Modifier.background(Color.Transparent)
+                    }
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = { Text("🔍 Searches (${searchHistory.size})") },
+                    selectedContentColor = Color.White,
+                    unselectedContentColor = if (isDark) Color.White.copy(0.6f) else Color.Gray,
+                    modifier = if (selectedTab == 1) {
+                        Modifier.background(Color(0xFF4A90E2))
+                    } else {
+                        Modifier.background(Color.Transparent)
+                    }
+                )
+            }
+        }
+
+        // Tab 0: Resumes Upload History
+        if (selectedTab == 0) {
+            item {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text("Search by name, email, or tech") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = if (searchQuery.isNotEmpty()) {
+                        {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear")
+                            }
+                        }
+                    } else null,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF4A90E2),
+                        unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f)
+                    )
+                )
+            }
+
+            item {
+                Text(
+                    "Total: ${filteredResumes.size} resumes",
+                    fontSize = 14.sp,
+                    color = if (isDark) Color.White.copy(0.7f) else Color.Gray
+                )
+            }
+
+            if (isLoading) {
+                item {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+            } else if (filteredResumes.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                Icons.Default.HistoryToggleOff,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = if (isDark) Color.White.copy(0.4f) else Color.Gray
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "No resumes found",
+                                color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+                            )
                         }
                     }
-                } else null,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF4A90E2),
-                    unfocusedBorderColor = if (isDark) Color.White.copy(0.3f) else Color.Gray.copy(0.3f)
-                )
-            )
-        }
-
-        // Count
-        item {
-            Text(
-                "Total: ${filteredResumes.size} resumes",
-                fontSize = 14.sp,
-                color = if (isDark) Color.White.copy(0.7f) else Color.Gray
-            )
-        }
-
-        // History List
-        if (isLoading) {
-            item {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                }
+            } else {
+                items(filteredResumes) { resume ->
+                    HistoryResumeCard(resume, isDark)
                 }
             }
-        } else if (filteredResumes.isEmpty()) {
+        }
+
+        // Tab 1: Search History
+        if (selectedTab == 1) {
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Default.HistoryToggleOff,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = if (isDark) Color.White.copy(0.4f) else Color.Gray
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "No history found",
-                            color = if (isDark) Color.White.copy(0.6f) else Color.Gray
-                        )
+                Text(
+                    "Filter Search History",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isDark) Color.White else Color.Black
+                )
+            }
+
+            if (isLoading) {
+                item {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
                     }
                 }
-            }
-        } else {
-            items(filteredResumes) { resume ->
-                HistoryResumeCard(resume, isDark)
+            } else if (searchHistory.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                Icons.Default.SearchOff,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = if (isDark) Color.White.copy(0.4f) else Color.Gray
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "No search history yet",
+                                color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+                            )
+                        }
+                    }
+                }
+            } else {
+                items(searchHistory) { history ->
+                    SearchHistoryCard(history, isDark)
+                }
             }
         }
     }
@@ -136,7 +222,7 @@ fun HistoryResumeCard(resume: RecruiterResumeEntity, isDark: Boolean) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = if (isDark) 0.1f else 0.95f)
+            containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
         ),
         elevation = CardDefaults.cardElevation(6.dp)
     ) {
@@ -194,6 +280,63 @@ fun HistoryResumeCard(resume: RecruiterResumeEntity, isDark: Boolean) {
                 fontSize = 11.sp,
                 color = if (isDark) Color.White.copy(0.5f) else Color.Gray,
                 maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+fun SearchHistoryCard(history: SearchHistoryEntity, isDark: Boolean) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp)),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
+        ),
+        elevation = CardDefaults.cardElevation(6.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "🔍 Search: ${history.techStack}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDark) Color.White else Color.Black
+                    )
+                    Text(
+                        formatDate(history.searchedAt),
+                        fontSize = 12.sp,
+                        color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+                    )
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFF4CAF50).copy(alpha = 0.2f)
+                ) {
+                    Text(
+                        "${history.resultCount} matches",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4CAF50)
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Experience: ${history.minExperience} - ${history.maxExperience} years",
+                fontSize = 11.sp,
+                color = if (isDark) Color.White.copy(0.7f) else Color.Gray
             )
         }
     }
