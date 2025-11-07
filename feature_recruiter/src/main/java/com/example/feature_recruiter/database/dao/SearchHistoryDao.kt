@@ -34,4 +34,9 @@ interface SearchHistoryDao {
 
     @Query("SELECT * FROM search_history WHERE recruiterEmail = :email ORDER BY searchedAt DESC")
     fun list(email: String): Flow<List<SearchHistoryEntity>>
+
+    @Query("DELETE FROM search_history WHERE searchedAt < :cutoff")
+    suspend fun deleteOlderThan(cutoff: Long)
+
+
 }

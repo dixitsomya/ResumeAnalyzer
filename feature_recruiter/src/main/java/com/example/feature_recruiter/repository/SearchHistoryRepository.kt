@@ -8,7 +8,11 @@ class SearchHistoryRepository(private val dao: SearchHistoryDao) {
 
     suspend fun insertSearchHistory(history: SearchHistoryEntity) {
         dao.insertSearchHistory(history)
+
+        val tenDaysAgo = System.currentTimeMillis() - (10L * 24 * 60 * 60 * 1000)
+        dao.deleteOlderThan(tenDaysAgo)
     }
+
 
     fun getSearchHistory(email: String): Flow<List<SearchHistoryEntity>> {
         return dao.getSearchHistory(email)

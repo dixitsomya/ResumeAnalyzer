@@ -89,25 +89,28 @@ object TechStackExtractor {
      * ✅ Extract tech stack from text with better parsing
      * Handles PDF text extraction issues
      */
-//    fun extractTechStack(text: String): List<String> {
-//        if (text.isBlank()) return emptyList()
-//
-//        val lowerText = text.lowercase()
-//        val foundTechs = mutableSetOf<String>()
-//
-//        // ✅ Sort by length (longest first) to avoid partial matches
-//        // e.g., check "react native" before "react"
-//        val sortedKeywords = TECH_KEYWORDS.keys.sortedByDescending { it.length }
-//
-//        for (keyword in sortedKeywords) {
-//            // ✅ Check if keyword exists as whole word or separated by spaces/special chars
-//            if (isKeywordPresent(lowerText, keyword)) {
-//                foundTechs.add(TECH_KEYWORDS[keyword] ?: keyword)
-//            }
-//        }
-//
-//        return foundTechs.sorted()
-//    }
+    private val sortedKeywords = TECH_KEYWORDS.keys.sortedByDescending { it.length }
+
+    fun extractTechStack(text: String): List<String> {
+        if (text.isBlank()) return emptyList()
+
+        val content = text.lowercase()
+            .replace("\n", " ")
+            .replace("\t", " ")
+            .replace(Regex("\\s+"), " ")
+
+        val found = mutableSetOf<String>()
+
+        for (keyword in sortedKeywords) {
+            val pattern = Regex("\\b${Regex.escape(keyword)}\\b", RegexOption.IGNORE_CASE)
+            if (pattern.containsMatchIn(content)) {
+                found.add(TECH_KEYWORDS[keyword] ?: keyword)
+            }
+        }
+
+        return found.toList().distinct()
+    }
+
 
     /**
      * ✅ Check if keyword is present as whole word
@@ -253,13 +256,13 @@ object TechStackExtractor {
         "firebase","mysql","postgresql","mongodb","sqlite","realm",
         "git","docker","kubernetes","aws","gcp","azure","jenkins","gradle","maven","rest","graphql","api"
     )
-    fun extractTechStack(text: String): List<String> {
-        val t = text.lowercase()
-        val found = mutableSetOf<String>()
-        dictionary.forEach { key ->
-            if (t.contains(key)) found.add(key)
-        }
-        // normalize aliases
-        return found.map { aliases[it] ?: it }.distinct()
-    }
+//    fun extractTechStack(text: String): List<String> {
+//        val t = text.lowercase()
+//        val found = mutableSetOf<String>()
+//        dictionary.forEach { key ->
+//            if (t.contains(key)) found.add(key)
+//        }
+//        // normalize aliases
+//        return found.map { aliases[it] ?: it }.distinct()
+//    }
 }

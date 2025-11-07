@@ -577,7 +577,8 @@ fun UploadSectionFixedV2(
 
                             // ✅ STEP 1: Extract text from PDF using iTextPDF
                             val pdfText = if (FileUtils.isPDFFile(fileName)) {
-                                PDFParser.extractTextFromPDF(context, uri.toString())
+                                PDFParser.extractTextFromPDF(context, uri)
+
                             } else {
                                 ""
                             }
@@ -820,10 +821,16 @@ fun UploadSectionFixedV2(
                     val results = selectedFiles.map { file ->
                         val selectedNorm = selectedTechs.map { it.lowercase() }.map { TechAliases.normalize(it) }.toSet()
                         val detectedNorm = file.detectedTechStack.map { it.lowercase() }.map { TechAliases.normalize(it) }.toSet()
+                        val matchedTechs = selectedTechs.filter { selected ->
+                            file.detectedTechStack.any { detected ->
+                                TechAliases.normalize(selected) == TechAliases.normalize(detected)
+                            }
+                        }
 
-                        val matchedTechs = detectedNorm.intersect(selectedNorm).toList()
-                        val isExpMatch = file.experience in minExp..maxExp
+
                         val isTechMatch = matchedTechs.isNotEmpty()
+                        val isExpMatch = file.experience in minExp..maxExp
+
                         val isMatch = isTechMatch && isExpMatch
 
                         val matchPercentage = if (selectedNorm.isEmpty()) 0
@@ -1143,9 +1150,34 @@ private fun extractExperienceFromFileName(fileName: String): Int {
     return 0
 }
 object TechAliases {
-    private val map = mapOf(
-        "js" to "javascript", "ts" to "typescript", "node" to "node.js",
-        "mongo" to "mongodb", "postgres" to "postgresql", "compose" to "jetpack compose"
+    private val aliasMap = mapOf(
+        "js" to "javascript",
+        "ts" to "typescript",
+        "node" to "node.js",
+        "nodejs" to "node.js",
+        "mongo" to "mongodb",
+        "postgres" to "postgresql",
+        "compose" to "jetpack compose",
+        "react.js" to "react",
+        "reactjs" to "react",
+        "spring boot" to "spring",
+        "springboot" to "spring",
+        "android development" to "android",
+        "frontend" to "react",
+        "backend" to "spring"
+
     )
-    fun normalize(s: String) = map[s] ?: s
+
+    fun normalize(s: String): String {
+        val lower = s.lowercase().trim()
+        return aliasMap[lower] ?: lower
+    }
+
+    // ✅ SUBSTRING MATCH CHECKER
+    fun isTechMatch(required: String, available: String): Boolean {
+        val r = normalize(required)
+        val a = normalize(available)
+
+        return a.contains(r) || r.contains(a)
+    }
 }

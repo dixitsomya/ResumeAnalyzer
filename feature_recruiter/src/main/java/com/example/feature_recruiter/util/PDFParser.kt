@@ -11,15 +11,14 @@ object PDFParser {
      * Extract text from PDF using iTextPDF (lightweight)
      * Returns empty string if extraction fails
      */
-    fun extractTextFromPDF(context: Context, filePath: String): String {
+    fun extractTextFromPDF(context: Context, uri: android.net.Uri): String {
         return try {
-            val file = File(filePath)
-            if (!file.exists()) return ""
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val bytes = inputStream?.readBytes() ?: return ""
 
-            val reader = PdfReader(filePath)
+            val reader = PdfReader(bytes)
             val text = StringBuilder()
 
-            // Extract text from all pages
             for (i in 1..reader.numberOfPages) {
                 text.append(PdfTextExtractor.getTextFromPage(reader, i))
                 text.append(" ")
@@ -33,13 +32,14 @@ object PDFParser {
         }
     }
 
+
     /**
      * Extract text from multiple PDFs
      * Returns map of filepath -> extracted text
      */
-    fun extractTextFromMultiplePDFs(context: Context, filePaths: List<String>): Map<String, String> {
-        return filePaths.associate { path ->
-            path to extractTextFromPDF(context, path)
-        }
-    }
+//    fun extractTextFromMultiplePDFs(context: Context, filePaths: List<String>): Map<String, String> {
+//        return filePaths.associate { path ->
+//            path to extractTextFromPDF(context, path)
+//        }
+//    }
 }
