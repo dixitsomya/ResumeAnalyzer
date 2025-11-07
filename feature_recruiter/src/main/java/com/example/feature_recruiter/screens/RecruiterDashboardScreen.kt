@@ -450,7 +450,7 @@
 //    }
 //}
 
-
+//---------------------------------------------------------------
 package com.example.feature_recruiter.screens
 
 import androidx.compose.animation.animateContentSize
