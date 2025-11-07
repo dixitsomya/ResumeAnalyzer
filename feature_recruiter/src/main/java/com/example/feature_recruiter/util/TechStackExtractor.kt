@@ -252,25 +252,25 @@ object TechStackExtractor {
      * ✅ Extract tech stack from text with better parsing
      * Handles PDF text extraction issues
      */
-    fun extractTechStack(text: String): List<String> {
-        if (text.isBlank()) return emptyList()
-
-        val lowerText = text.lowercase()
-        val foundTechs = mutableSetOf<String>()
-
-        // ✅ Sort by length (longest first) to avoid partial matches
-        // e.g., check "react native" before "react"
-        val sortedKeywords = TECH_KEYWORDS.keys.sortedByDescending { it.length }
-
-        for (keyword in sortedKeywords) {
-            // ✅ Check if keyword exists as whole word or separated by spaces/special chars
-            if (isKeywordPresent(lowerText, keyword)) {
-                foundTechs.add(TECH_KEYWORDS[keyword] ?: keyword)
-            }
-        }
-
-        return foundTechs.sorted()
-    }
+//    fun extractTechStack(text: String): List<String> {
+//        if (text.isBlank()) return emptyList()
+//
+//        val lowerText = text.lowercase()
+//        val foundTechs = mutableSetOf<String>()
+//
+//        // ✅ Sort by length (longest first) to avoid partial matches
+//        // e.g., check "react native" before "react"
+//        val sortedKeywords = TECH_KEYWORDS.keys.sortedByDescending { it.length }
+//
+//        for (keyword in sortedKeywords) {
+//            // ✅ Check if keyword exists as whole word or separated by spaces/special chars
+//            if (isKeywordPresent(lowerText, keyword)) {
+//                foundTechs.add(TECH_KEYWORDS[keyword] ?: keyword)
+//            }
+//        }
+//
+//        return foundTechs.sorted()
+//    }
 
     /**
      * ✅ Check if keyword is present as whole word
@@ -397,5 +397,32 @@ object TechStackExtractor {
                 }
             )
         )
+    }
+
+    private val aliases = mapOf(
+        "js" to "javascript",
+        "ts" to "typescript",
+        "react.js" to "react",
+        "node" to "node.js",
+        "mongo" to "mongodb",
+        "postgres" to "postgresql",
+        "compose" to "jetpack compose",
+        "gcp" to "google cloud", "aws" to "amazon web services"
+    )
+    private val dictionary = setOf(
+        "kotlin","java","python","javascript","typescript","swift","go","rust","c++","c#",
+        "android","ios","flutter","react native","react","vue","angular","html","css","jetpack compose",
+        "spring","spring boot","node.js","django","flask","express",
+        "firebase","mysql","postgresql","mongodb","sqlite","realm",
+        "git","docker","kubernetes","aws","gcp","azure","jenkins","gradle","maven","rest","graphql","api"
+    )
+    fun extractTechStack(text: String): List<String> {
+        val t = text.lowercase()
+        val found = mutableSetOf<String>()
+        dictionary.forEach { key ->
+            if (t.contains(key)) found.add(key)
+        }
+        // normalize aliases
+        return found.map { aliases[it] ?: it }.distinct()
     }
 }

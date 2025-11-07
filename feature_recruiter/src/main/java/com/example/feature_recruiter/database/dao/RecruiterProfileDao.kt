@@ -69,7 +69,13 @@ interface RecruiterProfileDao {
         companyName: String,
         recruiterName: String
     )
+    @Query("SELECT * FROM recruiter_profile WHERE email = :email LIMIT 1")
+    suspend fun getByEmail(email: String): RecruiterProfileEntity?
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: RecruiterProfileEntity)
     @Delete
     suspend fun deleteProfile(profile: RecruiterProfileEntity)
 }
+
+

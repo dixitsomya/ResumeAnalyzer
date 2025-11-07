@@ -818,30 +818,17 @@ fun UploadSectionFixedV2(
 
                     // ✅ STEP 2: Parse each resume with proper logic
                     val results = selectedFiles.map { file ->
-                        // Extract text for parsing (already done during file selection)
-                        val extractedText = file.extractedText.lowercase()
-                        val selectedTechsLower = selectedTechs.map { it.lowercase() }
+                        val selectedNorm = selectedTechs.map { it.lowercase() }.map { TechAliases.normalize(it) }.toSet()
+                        val detectedNorm = file.detectedTechStack.map { it.lowercase() }.map { TechAliases.normalize(it) }.toSet()
 
-                        // ✅ Check 1: Find ALL matched techs from selected list
-                        val matchedTechs = file.detectedTechStack.filter { tech ->
-                            selectedTechsLower.contains(tech.lowercase())
-                        }
-
-                        // ✅ Check 2: Verify experience is in range
-                        val isExpMatch = file.experience >= minExp && file.experience <= maxExp
-
-                        // ✅ Check 3: Must have at least one matching tech
+                        val matchedTechs = detectedNorm.intersect(selectedNorm).toList()
+                        val isExpMatch = file.experience in minExp..maxExp
                         val isTechMatch = matchedTechs.isNotEmpty()
-
-                        // ✅ FINAL FLAG: Resume is match only if BOTH checks pass
                         val isMatch = isTechMatch && isExpMatch
 
-                        // Calculate match percentage
-                        val matchPercentage = if (selectedTechs.isEmpty()) {
-                            0
-                        } else {
-                            (matchedTechs.size * 100) / selectedTechs.size
-                        }
+                        val matchPercentage = if (selectedNorm.isEmpty()) 0
+                        else (matchedTechs.size * 100) / selectedNorm.size
+
 
                         UploadedResumeWithMatch(
                             candidateName = file.candidateName,
@@ -1152,5 +1139,13 @@ private fun extractExperienceFromFileName(fileName: String): Int {
         val years = cleaned.toIntOrNull()
         if (years != null && years in 0..100) return years
     }
+
     return 0
+}
+object TechAliases {
+    private val map = mapOf(
+        "js" to "javascript", "ts" to "typescript", "node" to "node.js",
+        "mongo" to "mongodb", "postgres" to "postgresql", "compose" to "jetpack compose"
+    )
+    fun normalize(s: String) = map[s] ?: s
 }

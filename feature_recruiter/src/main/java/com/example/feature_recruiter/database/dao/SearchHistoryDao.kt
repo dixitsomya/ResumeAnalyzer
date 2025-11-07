@@ -28,4 +28,10 @@ interface SearchHistoryDao {
 
     @Query("DELETE FROM search_history WHERE recruiterEmail = :email")
     suspend fun clearAllHistory(email: String)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(row: SearchHistoryEntity)
+
+    @Query("SELECT * FROM search_history WHERE recruiterEmail = :email ORDER BY searchedAt DESC")
+    fun list(email: String): Flow<List<SearchHistoryEntity>>
 }
