@@ -1,7 +1,10 @@
+
+//
 //package com.example.feature_recruiter.util
 //
 //object TechStackExtractor {
 //
+//    // ✅ Organized by category
 //    private val TECH_KEYWORDS = mapOf(
 //        // Languages
 //        "kotlin" to "Kotlin",
@@ -60,6 +63,16 @@
 //        "graphql" to "GraphQL"
 //    )
 //
+//    // ✅ Categorized tech stacks
+//    data class CategorizedTechStack(
+//        val languages: List<String> = emptyList(),
+//        val mobile: List<String> = emptyList(),
+//        val frontend: List<String> = emptyList(),
+//        val backend: List<String> = emptyList(),
+//        val databases: List<String> = emptyList(),
+//        val tools: List<String> = emptyList()
+//    )
+//
 //    fun extractTechStack(text: String): List<String> {
 //        if (text.isBlank()) return emptyList()
 //
@@ -75,6 +88,70 @@
 //        return foundTechs.sorted()
 //    }
 //
+//    fun extractCategorizedTechStack(text: String): CategorizedTechStack {
+//        if (text.isBlank()) return CategorizedTechStack()
+//
+//        val lowerText = text.lowercase()
+//
+//        val languages = mutableListOf<String>()
+//        val mobile = mutableListOf<String>()
+//        val frontend = mutableListOf<String>()
+//        val backend = mutableListOf<String>()
+//        val databases = mutableListOf<String>()
+//        val tools = mutableListOf<String>()
+//
+//        // Languages
+//        listOf("kotlin", "java", "python", "javascript", "typescript", "swift", "go", "rust", "cpp", "csharp", "c#").forEach { keyword ->
+//            if (keyword in lowerText) {
+//                languages.add(TECH_KEYWORDS[keyword] ?: keyword)
+//            }
+//        }
+//
+//        // Mobile
+//        listOf("android", "ios", "flutter", "react native").forEach { keyword ->
+//            if (keyword in lowerText) {
+//                mobile.add(TECH_KEYWORDS[keyword] ?: keyword)
+//            }
+//        }
+//
+//        // Frontend
+//        listOf("react", "vue", "angular", "html", "css", "jetpack compose").forEach { keyword ->
+//            if (keyword in lowerText) {
+//                frontend.add(TECH_KEYWORDS[keyword] ?: keyword)
+//            }
+//        }
+//
+//        // Backend
+//        listOf("spring", "node", "django", "flask", "express").forEach { keyword ->
+//            if (keyword in lowerText) {
+//                backend.add(TECH_KEYWORDS[keyword] ?: keyword)
+//            }
+//        }
+//
+//        // Databases
+//        listOf("firebase", "mysql", "postgresql", "mongodb", "sqlite", "realm").forEach { keyword ->
+//            if (keyword in lowerText) {
+//                databases.add(TECH_KEYWORDS[keyword] ?: keyword)
+//            }
+//        }
+//
+//        // Tools
+//        listOf("git", "docker", "kubernetes", "aws", "gcp", "azure", "jenkins", "gradle", "maven", "api", "rest", "graphql").forEach { keyword ->
+//            if (keyword in lowerText) {
+//                tools.add(TECH_KEYWORDS[keyword] ?: keyword)
+//            }
+//        }
+//
+//        return CategorizedTechStack(
+//            languages = languages.distinct(),
+//            mobile = mobile.distinct(),
+//            frontend = frontend.distinct(),
+//            backend = backend.distinct(),
+//            databases = databases.distinct(),
+//            tools = tools.distinct()
+//        )
+//    }
+//
 //    fun extractFromMultipleTexts(texts: List<String>): List<String> {
 //        return texts
 //            .flatMap { extractTechStack(it) }
@@ -88,17 +165,21 @@ package com.example.feature_recruiter.util
 
 object TechStackExtractor {
 
-    // ✅ Organized by category
+    // ✅ Keywords with multiple variations
     private val TECH_KEYWORDS = mapOf(
         // Languages
         "kotlin" to "Kotlin",
         "java" to "Java",
         "python" to "Python",
         "javascript" to "JavaScript",
+        "js" to "JavaScript",
         "typescript" to "TypeScript",
+        "ts" to "TypeScript",
         "swift" to "Swift",
         "go" to "Go",
+        "golang" to "Go",
         "rust" to "Rust",
+        "c++" to "C++",
         "cpp" to "C++",
         "csharp" to "C#",
         "c#" to "C#",
@@ -108,46 +189,110 @@ object TechStackExtractor {
         "ios" to "iOS",
         "flutter" to "Flutter",
         "react native" to "React Native",
+        "reactnative" to "React Native",
 
         // Frontend
         "react" to "React",
+        "reactjs" to "React",
         "vue" to "Vue",
+        "vuejs" to "Vue",
         "angular" to "Angular",
+        "angularjs" to "Angular",
         "html" to "HTML",
+        "html5" to "HTML",
         "css" to "CSS",
+        "css3" to "CSS",
         "jetpack compose" to "Jetpack Compose",
+        "jetpackcompose" to "Jetpack Compose",
 
         // Backend
         "spring" to "Spring",
+        "springboot" to "Spring",
+        "spring boot" to "Spring",
         "node" to "Node.js",
+        "nodejs" to "Node.js",
+        "node.js" to "Node.js",
         "django" to "Django",
         "flask" to "Flask",
         "express" to "Express",
+        "expressjs" to "Express",
 
         // Databases
         "firebase" to "Firebase",
         "mysql" to "MySQL",
         "postgresql" to "PostgreSQL",
+        "postgres" to "PostgreSQL",
         "mongodb" to "MongoDB",
+        "mongo" to "MongoDB",
         "sqlite" to "SQLite",
         "realm" to "Realm",
+        "oracle" to "Oracle",
 
         // Tools & Frameworks
         "git" to "Git",
         "docker" to "Docker",
         "kubernetes" to "Kubernetes",
+        "k8s" to "Kubernetes",
         "aws" to "AWS",
+        "amazon" to "AWS",
         "gcp" to "GCP",
+        "google cloud" to "GCP",
         "azure" to "Azure",
         "jenkins" to "Jenkins",
         "gradle" to "Gradle",
         "maven" to "Maven",
         "api" to "API",
         "rest" to "REST",
+        "restful" to "REST",
+        "graphql" to "GraphQL",
         "graphql" to "GraphQL"
     )
 
-    // ✅ Categorized tech stacks
+    /**
+     * ✅ Extract tech stack from text with better parsing
+     * Handles PDF text extraction issues
+     */
+    fun extractTechStack(text: String): List<String> {
+        if (text.isBlank()) return emptyList()
+
+        val lowerText = text.lowercase()
+        val foundTechs = mutableSetOf<String>()
+
+        // ✅ Sort by length (longest first) to avoid partial matches
+        // e.g., check "react native" before "react"
+        val sortedKeywords = TECH_KEYWORDS.keys.sortedByDescending { it.length }
+
+        for (keyword in sortedKeywords) {
+            // ✅ Check if keyword exists as whole word or separated by spaces/special chars
+            if (isKeywordPresent(lowerText, keyword)) {
+                foundTechs.add(TECH_KEYWORDS[keyword] ?: keyword)
+            }
+        }
+
+        return foundTechs.sorted()
+    }
+
+    /**
+     * ✅ Check if keyword is present as whole word
+     * Prevents partial matches like "java" in "javascript"
+     */
+    private fun isKeywordPresent(text: String, keyword: String): Boolean {
+        // Create pattern that matches keyword surrounded by word boundaries
+        val patterns = listOf(
+            Regex("\\b$keyword\\b", RegexOption.IGNORE_CASE),
+            Regex("\\s$keyword\\s", RegexOption.IGNORE_CASE),
+            Regex("^$keyword\\s", RegexOption.IGNORE_CASE),
+            Regex("\\s$keyword$", RegexOption.IGNORE_CASE),
+            Regex("^$keyword$", RegexOption.IGNORE_CASE),
+            Regex("[,\\-\\(\\)\\.]$keyword[,\\-\\(\\)\\.]", RegexOption.IGNORE_CASE)
+        )
+
+        return patterns.any { it.containsMatchIn(text) }
+    }
+
+    /**
+     * ✅ Categorized tech stacks
+     */
     data class CategorizedTechStack(
         val languages: List<String> = emptyList(),
         val mobile: List<String> = emptyList(),
@@ -157,21 +302,9 @@ object TechStackExtractor {
         val tools: List<String> = emptyList()
     )
 
-    fun extractTechStack(text: String): List<String> {
-        if (text.isBlank()) return emptyList()
-
-        val lowerText = text.lowercase()
-        val foundTechs = mutableSetOf<String>()
-
-        for ((keyword, display) in TECH_KEYWORDS) {
-            if (keyword in lowerText) {
-                foundTechs.add(display)
-            }
-        }
-
-        return foundTechs.sorted()
-    }
-
+    /**
+     * ✅ Extract and categorize tech stack
+     */
     fun extractCategorizedTechStack(text: String): CategorizedTechStack {
         if (text.isBlank()) return CategorizedTechStack()
 
@@ -184,47 +317,53 @@ object TechStackExtractor {
         val databases = mutableListOf<String>()
         val tools = mutableListOf<String>()
 
-        // Languages
-        listOf("kotlin", "java", "python", "javascript", "typescript", "swift", "go", "rust", "cpp", "csharp", "c#").forEach { keyword ->
-            if (keyword in lowerText) {
-                languages.add(TECH_KEYWORDS[keyword] ?: keyword)
+        // ✅ Languages
+        listOf("kotlin", "java", "python", "javascript", "js", "typescript", "ts", "swift", "go", "golang", "rust", "c++", "cpp", "csharp", "c#")
+            .forEach { keyword ->
+                if (isKeywordPresent(lowerText, keyword)) {
+                    languages.add(TECH_KEYWORDS[keyword] ?: keyword)
+                }
             }
-        }
 
-        // Mobile
-        listOf("android", "ios", "flutter", "react native").forEach { keyword ->
-            if (keyword in lowerText) {
-                mobile.add(TECH_KEYWORDS[keyword] ?: keyword)
+        // ✅ Mobile
+        listOf("android", "ios", "flutter", "react native", "reactnative")
+            .forEach { keyword ->
+                if (isKeywordPresent(lowerText, keyword)) {
+                    mobile.add(TECH_KEYWORDS[keyword] ?: keyword)
+                }
             }
-        }
 
-        // Frontend
-        listOf("react", "vue", "angular", "html", "css", "jetpack compose").forEach { keyword ->
-            if (keyword in lowerText) {
-                frontend.add(TECH_KEYWORDS[keyword] ?: keyword)
+        // ✅ Frontend
+        listOf("react", "reactjs", "vue", "vuejs", "angular", "angularjs", "html", "html5", "css", "css3", "jetpack compose", "jetpackcompose")
+            .forEach { keyword ->
+                if (isKeywordPresent(lowerText, keyword)) {
+                    frontend.add(TECH_KEYWORDS[keyword] ?: keyword)
+                }
             }
-        }
 
-        // Backend
-        listOf("spring", "node", "django", "flask", "express").forEach { keyword ->
-            if (keyword in lowerText) {
-                backend.add(TECH_KEYWORDS[keyword] ?: keyword)
+        // ✅ Backend
+        listOf("spring", "springboot", "spring boot", "node", "nodejs", "node.js", "django", "flask", "express", "expressjs")
+            .forEach { keyword ->
+                if (isKeywordPresent(lowerText, keyword)) {
+                    backend.add(TECH_KEYWORDS[keyword] ?: keyword)
+                }
             }
-        }
 
-        // Databases
-        listOf("firebase", "mysql", "postgresql", "mongodb", "sqlite", "realm").forEach { keyword ->
-            if (keyword in lowerText) {
-                databases.add(TECH_KEYWORDS[keyword] ?: keyword)
+        // ✅ Databases
+        listOf("firebase", "mysql", "postgresql", "postgres", "mongodb", "mongo", "sqlite", "realm", "oracle")
+            .forEach { keyword ->
+                if (isKeywordPresent(lowerText, keyword)) {
+                    databases.add(TECH_KEYWORDS[keyword] ?: keyword)
+                }
             }
-        }
 
-        // Tools
-        listOf("git", "docker", "kubernetes", "aws", "gcp", "azure", "jenkins", "gradle", "maven", "api", "rest", "graphql").forEach { keyword ->
-            if (keyword in lowerText) {
-                tools.add(TECH_KEYWORDS[keyword] ?: keyword)
+        // ✅ Tools
+        listOf("git", "docker", "kubernetes", "k8s", "aws", "amazon", "gcp", "google cloud", "azure", "jenkins", "gradle", "maven", "api", "rest", "restful", "graphql")
+            .forEach { keyword ->
+                if (isKeywordPresent(lowerText, keyword)) {
+                    tools.add(TECH_KEYWORDS[keyword] ?: keyword)
+                }
             }
-        }
 
         return CategorizedTechStack(
             languages = languages.distinct(),
@@ -236,10 +375,27 @@ object TechStackExtractor {
         )
     }
 
+    /**
+     * ✅ Extract from multiple texts
+     */
     fun extractFromMultipleTexts(texts: List<String>): List<String> {
         return texts
             .flatMap { extractTechStack(it) }
             .distinct()
             .sorted()
+    }
+
+    /**
+     * ✅ Debug function - shows what was found
+     */
+    fun debugExtractTechStack(text: String): Map<String, List<Any>> {
+        return mapOf(
+            "extractedTechs" to extractTechStack(text),
+            "categorized" to listOfNotNull(
+                extractCategorizedTechStack(text).let { cat ->
+                    if (cat.languages.isNotEmpty()) cat.languages else null
+                }
+            )
+        )
     }
 }
