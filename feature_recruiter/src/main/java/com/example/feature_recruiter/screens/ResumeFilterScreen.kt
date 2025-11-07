@@ -197,9 +197,9 @@ fun ResumeFilterScreenWithUpload(
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = Color(0xFF4A90E2),
-                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.2f) else Color.Gray.copy(0.3f)
+                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.2f) else Color.DarkGray.copy(0.3f)
                                 ),
-                                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
+                                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp,color=if (isDark) Color.White.copy(0.2f) else Color.Black)
                             )
 
                             Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (isDark) Color.White else Color.Black)
@@ -213,9 +213,9 @@ fun ResumeFilterScreenWithUpload(
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = Color(0xFF4A90E2),
-                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.2f) else Color.Gray.copy(0.3f)
+                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.2f) else Color.DarkGray.copy(0.3f)
                                 ),
-                                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
+                                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp,color=if (isDark) Color.White.copy(0.2f) else Color.Black)
                             )
                         }
 
@@ -264,14 +264,14 @@ fun ResumeFilterScreenWithUpload(
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(50.dp)
-                                    .shadow(6.dp, RoundedCornerShape(12.dp)),
+                                    .shadow(3.dp, RoundedCornerShape(12.dp)),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
                                 shape = RoundedCornerShape(12.dp),
                                 enabled = selectedTechs.isNotEmpty()
                             ) {
-                                Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(20.dp),tint = if (isDark) Color.White else Color.Black)
                                 Spacer(Modifier.width(8.dp))
-                                Text("Next: Upload", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+                                Text("Next: Upload", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp,color = if (isDark) Color.White else Color.Black)
                             }
 
                             Button(
