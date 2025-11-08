@@ -23,6 +23,8 @@ object LocalResumeDatabase {
     private lateinit var db: AppDatabase
     private val gson = Gson()
 
+    private var currentUserEmail: String? = null
+
     // In-memory cache
     private val _resumes = MutableStateFlow<List<Resume>>(emptyList())
     val resumes: StateFlow<List<Resume>> = _resumes.asStateFlow()
@@ -39,12 +41,36 @@ object LocalResumeDatabase {
         Log.d(TAG, "Database initialized")
     }
 
+    // ✅ NEW: Set current user
+    fun setCurrentUser(email: String) {
+        currentUserEmail = email
+        Log.d(TAG, "Current user set to: $email")
+        clearCache()
+    }
+    // ✅ NEW: Clear current user
+    fun clearCurrentUser() {
+        currentUserEmail = null
+        clearCache()
+        Log.d(TAG, "Current user cleared")
+    }
+
+    // ✅ NEW: Get current user
+    fun getCurrentUser(): String? = currentUserEmail
+
+    // ✅ NEW: Clear cache
+    private fun clearCache() {
+        _resumes.value = emptyList()
+        _analysisResults.value = emptyMap()
+        _selectedResumeId.value = null
+    }
+
     // ✅ Load from database on IO thread, not main thread
     private suspend fun loadFromDatabaseAsync() {
         withContext(Dispatchers.IO) {
             try {
+                val email = currentUserEmail ?: return@withContext
                 Log.d(TAG, "Loading resumes from database...")
-                val resumeList = db.resumeDao().getAllResumesSync() // Use non-Flow version
+                val resumeList = db.resumeDao().getResumesByUserEmail(email)
 
                 val resumes = resumeList.map { entity ->
                     Resume(
@@ -130,12 +156,11 @@ object LocalResumeDatabase {
     suspend fun addResume(resume: Resume) {
         withContext(Dispatchers.IO) {
             try {
+                val email = currentUserEmail ?: return@withContext
                 val currentList = _resumes.value.toMutableList()
                 currentList.add(0, resume)
 
-                // ✅ FIXED: Only delete if exceeds limit AND is ANALYZED
                 if (currentList.size > MAX_RESUMES) {
-                    // Find oldest ANALYZED resume to delete
                     val oldestAnalyzed = currentList
                         .filter { it.status == ResumeStatus.ANALYZED }
                         .minByOrNull { it.uploadedDate }
@@ -143,14 +168,15 @@ object LocalResumeDatabase {
                     if (oldestAnalyzed != null) {
                         currentList.remove(oldestAnalyzed)
                         deleteResumeFromDBAsync(oldestAnalyzed.id)
-                        Log.d(TAG, "Deleted oldest analyzed resume: ${oldestAnalyzed.id}")
                     }
                 }
 
                 _resumes.value = currentList
 
+                // ✅ CHANGED: Add userEmail field
                 val entity = ResumeEntity(
                     id = resume.id,
+                    userEmail = email,  // ✅ ADD THIS
                     fileName = resume.fileName,
                     filePath = resume.filePath,
                     fileSize = resume.fileSize,
@@ -159,7 +185,7 @@ object LocalResumeDatabase {
                     status = resume.status.name
                 )
                 db.resumeDao().insertResume(entity)
-                Log.d(TAG, "Resume added: ${resume.fileName}")
+                Log.d(TAG, "Resume added for user: $email")
             } catch (e: Exception) {
                 Log.e(TAG, "Error adding resume: ${e.message}", e)
             }
@@ -170,6 +196,7 @@ object LocalResumeDatabase {
     suspend fun updateResume(resume: Resume) {
         withContext(Dispatchers.IO) {
             try {
+                val email = currentUserEmail ?: return@withContext
                 val currentList = _resumes.value.toMutableList()
                 val index = currentList.indexOfFirst { it.id == resume.id }
                 if (index != -1) {
@@ -177,8 +204,10 @@ object LocalResumeDatabase {
                     _resumes.value = currentList
                 }
 
+                // ✅ CHANGED: Add userEmail field
                 val entity = ResumeEntity(
                     id = resume.id,
+                    userEmail = email,  // ✅ ADD THIS
                     fileName = resume.fileName,
                     filePath = resume.filePath,
                     fileSize = resume.fileSize,
@@ -187,7 +216,7 @@ object LocalResumeDatabase {
                     status = resume.status.name
                 )
                 db.resumeDao().updateResume(entity)
-                Log.d(TAG, "Resume updated: ${resume.fileName}")
+                Log.d(TAG, "Resume updated for user: $email")
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating resume: ${e.message}", e)
             }
@@ -220,12 +249,15 @@ object LocalResumeDatabase {
     suspend fun saveAnalysisResult(result: ATSAnalysisResult) {
         withContext(Dispatchers.IO) {
             try {
+                val email = currentUserEmail ?: return@withContext
                 val currentMap = _analysisResults.value.toMutableMap()
                 currentMap[result.resumeId] = result
                 _analysisResults.value = currentMap
 
+                // ✅ CHANGED: Add userEmail field
                 val entity = com.example.feature_student.database.entity.AnalysisResultEntity(
                     resumeId = result.resumeId,
+                    userEmail = email,  // ✅ ADD THIS
                     overallScore = result.overallScore,
                     extractedText = result.extractedText,
                     formatScore = result.breakdown.formatScore,
@@ -250,12 +282,13 @@ object LocalResumeDatabase {
                     suggestionsJson = gson.toJson(result.suggestions)
                 )
                 db.analysisResultDao().insertAnalysisResult(entity)
-                Log.d(TAG, "Analysis saved for resume: ${result.resumeId}")
+                Log.d(TAG, "Analysis saved for user: $email")
             } catch (e: Exception) {
                 Log.e(TAG, "Error saving analysis: ${e.message}", e)
             }
         }
     }
+
 
     // ✅ FIX: Get analysis with database fallback
     suspend fun getAnalysisResult(resumeId: String): ATSAnalysisResult? {
@@ -292,6 +325,7 @@ object LocalResumeDatabase {
             try {
                 val currentMap = _analysisResults.value.toMutableMap()
                 val result = currentMap[resumeId] ?: return@withContext
+                val email = currentUserEmail ?: return@withContext
 
                 val updatedSuggestions = result.suggestions.map { suggestion ->
                     if (suggestion.id == suggestionId) {
@@ -313,7 +347,8 @@ object LocalResumeDatabase {
                         title = "",
                         description = "",
                         priority = "",
-                        isFixed = isFixed
+                        isFixed = isFixed,
+                        userEmail = email
                     )
                 )
                 Log.d(TAG, "Suggestion updated: $suggestionId")

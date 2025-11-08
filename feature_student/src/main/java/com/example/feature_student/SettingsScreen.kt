@@ -1,3 +1,633 @@
+//package com.example.feature_student
+//
+//import androidx.compose.foundation.layout.*
+//import androidx.compose.foundation.lazy.LazyColumn
+//import androidx.compose.foundation.shape.RoundedCornerShape
+//import androidx.compose.material.icons.Icons
+//import androidx.compose.material.icons.filled.*
+//import androidx.compose.material3.*
+//import androidx.compose.runtime.*
+//import androidx.compose.ui.Modifier
+//import androidx.compose.ui.unit.dp
+//import androidx.compose.ui.Alignment
+//import androidx.compose.ui.text.font.FontWeight
+//import androidx.compose.ui.unit.sp
+//import androidx.compose.ui.platform.LocalContext
+//import androidx.compose.ui.draw.shadow
+//import androidx.compose.foundation.isSystemInDarkTheme
+//import androidx.compose.foundation.text.selection.TextSelectionColors
+//import androidx.navigation.NavController
+//import com.example.resumeanalyzer.core.navigation.datastore.UserPreference
+//import com.example.resumeanalyzer.core.database.DatabaseModule
+//import com.example.resumeanalyzer.core.navigation.datastore.UserCache
+//import kotlinx.coroutines.Dispatchers
+//import kotlinx.coroutines.launch
+//import kotlinx.coroutines.withContext
+//
+//// Validation regex constants
+//private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.(com|org|net|in)$")
+//private val NAME_REGEX = Regex("^[A-Za-z ]{2,30}$")
+//
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun SettingsScreen(
+//    userEmail: String,
+//    onBack: () -> Unit,
+//    onThemeChange: (String) -> Unit,
+//    navController: NavController
+//) {
+//    val context = LocalContext.current
+//    val scope = rememberCoroutineScope()
+//
+//    val userState by UserPreference.getUser(context).collectAsState(initial = UserCache())
+//
+//    var name by remember { mutableStateOf("") }
+//    var email by remember { mutableStateOf("") }
+//    var originalEmail by remember { mutableStateOf("") } // Track original email for updates
+//    var role by remember { mutableStateOf("Student") }
+//    var notificationEnabled by remember { mutableStateOf(true) }
+//    var selectedTheme by remember { mutableStateOf("system") }
+//
+//    // Error states for validation
+//    var nameError by remember { mutableStateOf<String?>(null) }
+//    var emailError by remember { mutableStateOf<String?>(null) }
+//    var showSuccessSnackbar by remember { mutableStateOf(false) }
+//    var errorMessage by remember { mutableStateOf<String?>(null) }
+//
+//    // Update state when userState changes
+//    LaunchedEffect(userState) {
+//        userState?.let { user ->
+//            name = user.name ?: ""
+//            email = user.email ?: userEmail
+//            originalEmail = user.email ?: userEmail // Store original email
+//            role = user.role ?: "Student"
+//            notificationEnabled = user.notificationsEnabled
+//            selectedTheme = user.theme
+//        }
+//    }
+//
+//    // Load from database with better condition
+//    LaunchedEffect(userState?.email) {
+//        val emailToUse = userState?.email ?: userEmail
+//        if (emailToUse.isNotEmpty()) {
+//            try {
+//                val db = DatabaseModule.provideDatabase(context)
+//                val userDao = DatabaseModule.provideUserDao(db)
+//                withContext(Dispatchers.IO) {
+//                    val dbUser = userDao.getUserByEmail(emailToUse)
+//                    withContext(Dispatchers.Main) {
+//                        dbUser?.let {
+//                            name = it.name
+//                            email = it.email
+//                            originalEmail = it.email // Store original email
+//                            role = it.role
+//
+//                            // Also update UserPreference with database name if it's different
+//                            if (it.name != userState?.name) {
+//                                scope.launch {
+//                                    UserPreference.saveUser(context, it.email, it.role, it.name)
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            } catch (e: Exception) {
+//                errorMessage = "Failed to load user data: ${e.message}"
+//            }
+//        }
+//    }
+//
+//    var isEditingName by remember { mutableStateOf(false) }
+//    var isEditingEmail by remember { mutableStateOf(false) }
+//
+//    // Validation functions
+//    fun validateName(inputName: String): String? {
+//        return when {
+//            inputName.isBlank() -> "Name is required"
+//            !NAME_REGEX.matches(inputName) -> "Enter a valid name (only letters, 2-30 chars)"
+//            else -> null
+//        }
+//    }
+//
+//    fun validateEmail(inputEmail: String): String? {
+//        return when {
+//            inputEmail.isBlank() -> "Email is required"
+//            !EMAIL_REGEX.matches(inputEmail) -> "Invalid email address"
+//            else -> null
+//        }
+//    }
+//
+//    val snackbarHostState = remember { SnackbarHostState() }
+//
+//    Scaffold(
+//        topBar = {
+//            TopAppBar(
+//                title = {
+//                    Text(
+//                        "Settings",
+//                        style = MaterialTheme.typography.headlineMedium.copy(
+//                            fontWeight = FontWeight.Bold
+//                        )
+//                    )
+//                },
+//                navigationIcon = {
+//                    IconButton(onClick = onBack) {
+//                        Icon(
+//                            Icons.Default.ArrowBack,
+//                            contentDescription = "Back",
+//                            tint = MaterialTheme.colorScheme.onSurface
+//                        )
+//                    }
+//                },
+//                colors = TopAppBarDefaults.topAppBarColors(
+//                    containerColor = MaterialTheme.colorScheme.surface
+//                )
+//            )
+//        },
+//        snackbarHost = { SnackbarHost(snackbarHostState) }
+//    ) { innerPadding ->
+//        LazyColumn(
+//            modifier = Modifier
+//                .padding(innerPadding)
+//                .fillMaxSize(),
+//            contentPadding = PaddingValues(16.dp),
+//            verticalArrangement = Arrangement.spacedBy(20.dp)
+//        ) {
+//            // Profile Section
+//            item {
+//                Card(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .shadow(8.dp, RoundedCornerShape(20.dp)),
+//                    shape = RoundedCornerShape(20.dp),
+//                    colors = CardDefaults.cardColors(
+//                        containerColor = MaterialTheme.colorScheme.primaryContainer
+//                    )
+//                ) {
+//                    Column(
+//                        modifier = Modifier.padding(24.dp)
+//                    ) {
+//                        // Profile Header
+//                        Row(
+//                            modifier = Modifier.fillMaxWidth(),
+//                            verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            Icon(
+//                                Icons.Default.AccountCircle,
+//                                contentDescription = "Profile",
+//                                modifier = Modifier.size(64.dp),
+//                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+//                            )
+//                            Spacer(modifier = Modifier.width(16.dp))
+//                            Column(modifier = Modifier.weight(1f)) {
+//                                Text(
+//                                    text = "Profile",
+//                                    style = MaterialTheme.typography.headlineSmall.copy(
+//                                        fontWeight = FontWeight.Bold
+//                                    ),
+//                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+//                                )
+//                                Text(
+//                                    text = role,
+//                                    style = MaterialTheme.typography.bodyLarge,
+//                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+//                                )
+//                            }
+//                        }
+//
+//                        Spacer(modifier = Modifier.height(20.dp))
+//
+//                        // Name Field
+//                        Row(
+//                            modifier = Modifier.fillMaxWidth(),
+//                            verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            Icon(
+//                                Icons.Default.Person,
+//                                contentDescription = "Name",
+//                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+//                                modifier = Modifier.size(24.dp)
+//                            )
+//                            Spacer(modifier = Modifier.width(12.dp))
+//
+//                            if (isEditingName) {
+//                                Column(modifier = Modifier.weight(1f)) {
+//                                    OutlinedTextField(
+//                                        value = name,
+//                                        onValueChange = {
+//                                            name = it
+//                                            nameError = validateName(it)
+//                                        },
+//                                        label = { Text("Full Name") },
+//                                        isError = nameError != null,
+//                                        modifier = Modifier.fillMaxWidth(),
+//                                        shape = RoundedCornerShape(12.dp),
+//                                        colors = OutlinedTextFieldDefaults.colors(
+//                                            focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
+//                                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f),
+//                                            cursorColor = MaterialTheme.colorScheme.onPrimaryContainer,
+//                                            focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+//                                            unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+//                                            selectionColors = TextSelectionColors(
+//                                                handleColor = MaterialTheme.colorScheme.onPrimaryContainer,
+//                                                backgroundColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+//                                                    alpha = 0.3f
+//                                                )
+//                                            )
+//                                        )
+//                                    )
+//                                    nameError?.let { error ->
+//                                        Text(
+//                                            text = error,
+//                                            color = MaterialTheme.colorScheme.error,
+//                                            style = MaterialTheme.typography.bodySmall,
+//                                            modifier = Modifier.padding(top = 4.dp)
+//                                        )
+//                                    }
+//                                }
+//                                IconButton(
+//                                    onClick = {
+//                                        val error = validateName(name)
+//                                        if (error == null) {
+//                                            isEditingName = false
+//                                            nameError = null
+//                                        } else {
+//                                            nameError = error
+//                                        }
+//                                    }
+//                                ) {
+//                                    Icon(
+//                                        Icons.Default.Check,
+//                                        contentDescription = "Save Name",
+//                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+//                                    )
+//                                }
+//                            } else {
+//                                Column(modifier = Modifier.weight(1f)) {
+//                                    Text(
+//                                        text = "Full Name",
+//                                        style = MaterialTheme.typography.bodySmall,
+//                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+//                                    )
+//                                    Text(
+//                                        text = name.ifEmpty { "Add your name" },
+//                                        fontSize = 16.sp,
+//                                        fontWeight = FontWeight.Medium,
+//                                        color = if (name.isEmpty()) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+//                                        else MaterialTheme.colorScheme.onPrimaryContainer
+//                                    )
+//                                }
+//                                IconButton(onClick = { isEditingName = true }) {
+//                                    Icon(
+//                                        Icons.Default.Edit,
+//                                        contentDescription = "Edit Name",
+//                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+//                                    )
+//                                }
+//                            }
+//                        }
+//
+//                        Spacer(modifier = Modifier.height(16.dp))
+//
+//                        // Email Field
+//                        Row(
+//                            modifier = Modifier.fillMaxWidth(),
+//                            verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            Icon(
+//                                Icons.Default.Email,
+//                                contentDescription = "Email",
+//                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+//                                modifier = Modifier.size(24.dp)
+//                            )
+//                            Spacer(modifier = Modifier.width(12.dp))
+//
+//
+//                            Column(modifier = Modifier.weight(1f)) {
+//                                Text(
+//                                    text = "Email Address",
+//                                    style = MaterialTheme.typography.bodySmall,
+//                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+//                                )
+//                                Text(
+//                                    text = email,
+//                                    fontSize = 16.sp,
+//                                    fontWeight = FontWeight.Medium,
+//                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+//                                )
+//                            }
+//
+//
+//                            Icon(
+//                                Icons.Default.Lock,
+//                                contentDescription = "Email Locked",
+//                                tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
+//                                modifier = Modifier.size(24.dp)
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//
+//            // Theme Card
+//            item {
+//                Card(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .shadow(6.dp, RoundedCornerShape(16.dp)),
+//                    shape = RoundedCornerShape(16.dp),
+//                    colors = CardDefaults.cardColors(
+//                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+//                    )
+//                ) {
+//                    SettingsThemeItem(
+//                        selectedTheme = selectedTheme,
+//                        onThemeSelected = {
+//                            selectedTheme = it
+//                            scope.launch { UserPreference.saveTheme(context, it) }
+//                            onThemeChange(it)
+//                        }
+//                    )
+//                }
+//            }
+//
+//            // Notifications Card
+//            item {
+//                Card(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .shadow(6.dp, RoundedCornerShape(16.dp)),
+//                    shape = RoundedCornerShape(16.dp),
+//                    colors = CardDefaults.cardColors(
+//                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+//                    )
+//                ) {
+//                    Row(
+//                        modifier = Modifier
+//                            .padding(20.dp)
+//                            .fillMaxWidth(),
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.SpaceBetween
+//                    ) {
+//                        Row(verticalAlignment = Alignment.CenterVertically) {
+//                            Icon(
+//                                Icons.Default.Notifications,
+//                                contentDescription = "Notifications",
+//                                tint = MaterialTheme.colorScheme.primary,
+//                                modifier = Modifier.size(28.dp)
+//                            )
+//                            Spacer(Modifier.width(16.dp))
+//                            Column {
+//                                Text(
+//                                    text = "Notifications",
+//                                    fontSize = 18.sp,
+//                                    fontWeight = FontWeight.SemiBold
+//                                )
+//                                Text(
+//                                    text = "Receive app notifications",
+//                                    style = MaterialTheme.typography.bodyMedium,
+//                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                                )
+//                            }
+//                        }
+//                        Switch(
+//                            checked = notificationEnabled,
+//                            onCheckedChange = {
+//                                notificationEnabled = it
+//                                scope.launch { UserPreference.saveNotification(context, it) }
+//                            }
+//                        )
+//                    }
+//                }
+//            }
+//
+//            // Apply Changes Button
+//            item {
+//                Button(
+//                    onClick = {
+//                        // Validate before saving
+//                        val nameValidation = validateName(name)
+//                        val emailValidation = validateEmail(email)
+//
+//                        if (nameValidation != null) {
+//                            nameError = nameValidation
+//                            return@Button
+//                        }
+//                        if (emailValidation != null) {
+//                            emailError = emailValidation
+//                            return@Button
+//                        }
+//
+//                        scope.launch {
+//                            try {
+//                                val db = DatabaseModule.provideDatabase(context)
+//                                val userDao = DatabaseModule.provideUserDao(db)
+//
+//                                withContext(Dispatchers.IO) {
+//                                    // Check if new email already exists (only if email changed)
+//                                    if (email != originalEmail) {
+//                                        val emailCount = userDao.emailExists(email)
+//                                        if (emailCount > 0) {
+//                                            withContext(Dispatchers.Main) {
+//                                                emailError = "Email already exists"
+//                                                errorMessage = "This email is already registered"
+//                                            }
+//                                            return@withContext
+//                                        }
+//                                    }
+//
+//                                    // Update in database using old email as reference
+//                                    userDao.updateUserByOldEmail(originalEmail, name, email, role)
+//
+//                                    withContext(Dispatchers.Main) {
+//                                        // Update UserPreference with new email
+//                                        UserPreference.saveUser(context, email, role, name)
+//
+//                                        // Update originalEmail to new email
+//                                        originalEmail = email
+//
+//                                        showSuccessSnackbar = true
+//                                        snackbarHostState.showSnackbar(
+//                                            message = "Settings updated successfully",
+//                                            duration = SnackbarDuration.Short
+//                                        )
+//
+//                                        // Navigate back after a brief delay
+//                                        kotlinx.coroutines.delay(300)
+//                                        navController.navigate("studentMain") {
+//                                            popUpTo("settings") { inclusive = true }
+//                                        }
+//                                    }
+//                                }
+//                            } catch (e: Exception) {
+//                                errorMessage = "Failed to update: ${e.message}"
+//                                snackbarHostState.showSnackbar(
+//                                    message = errorMessage ?: "Update failed",
+//                                    duration = SnackbarDuration.Short
+//                                )
+//                            }
+//                        }
+//                    },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(60.dp)
+//                        .shadow(12.dp, RoundedCornerShape(30.dp)),
+//                    shape = RoundedCornerShape(30.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = MaterialTheme.colorScheme.primary
+//                    ),
+//                    elevation = ButtonDefaults.buttonElevation(
+//                        defaultElevation = 8.dp,
+//                        pressedElevation = 12.dp
+//                    )
+//                ) {
+//                    Icon(
+//                        Icons.Default.Save,
+//                        contentDescription = "Save",
+//                        modifier = Modifier.size(24.dp)
+//                    )
+//                    Spacer(modifier = Modifier.width(12.dp))
+//                    Text(
+//                        "Apply Changes",
+//                        fontWeight = FontWeight.Bold,
+//                        fontSize = 18.sp
+//                    )
+//                }
+//            }
+//
+//            // Help & About Card
+//            item {
+//                Card(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .shadow(6.dp, RoundedCornerShape(16.dp)),
+//                    shape = RoundedCornerShape(16.dp),
+//                    colors = CardDefaults.cardColors(
+//                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+//                    )
+//                ) {
+//                    SettingsItem(
+//                        icon = Icons.Default.Info,
+//                        title = "Help & About",
+//                        description = "Version 1.0.0 • Contact: support@example.com"
+//                    )
+//                }
+//            }
+//
+//            // Bottom spacing
+//            item {
+//                Spacer(modifier = Modifier.height(16.dp))
+//            }
+//        }
+//    }
+//}
+//
+//@Composable
+//fun SettingsItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, description: String) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(20.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        Icon(
+//            icon,
+//            contentDescription = title,
+//            tint = MaterialTheme.colorScheme.primary,
+//            modifier = Modifier.size(28.dp)
+//        )
+//        Spacer(Modifier.width(16.dp))
+//        Column {
+//            Text(
+//                title,
+//                fontSize = 18.sp,
+//                fontWeight = FontWeight.SemiBold
+//            )
+//            Text(
+//                description,
+//                fontSize = 14.sp,
+//                color = MaterialTheme.colorScheme.onSurfaceVariant
+//            )
+//        }
+//    }
+//}
+//
+//@Composable
+//fun SettingsThemeItem(selectedTheme: String, onThemeSelected: (String) -> Unit) {
+//    val isSystemDark = isSystemInDarkTheme()
+//
+//    Column(modifier = Modifier.padding(20.dp)) {
+//        Row(verticalAlignment = Alignment.CenterVertically) {
+//            Icon(
+//                Icons.Default.Palette,
+//                contentDescription = "Theme",
+//                tint = MaterialTheme.colorScheme.primary,
+//                modifier = Modifier.size(28.dp)
+//            )
+//            Spacer(Modifier.width(16.dp))
+//            Column {
+//                Text(
+//                    "Theme",
+//                    fontSize = 18.sp,
+//                    fontWeight = FontWeight.SemiBold
+//                )
+//                Text(
+//                    "Customize app appearance",
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
+//            }
+//        }
+//
+//        Spacer(Modifier.height(20.dp))
+//
+//        Row(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.SpaceEvenly
+//        ) {
+//            ThemeChip("Light", selectedTheme == "light") { onThemeSelected("light") }
+//            ThemeChip("Dark", selectedTheme == "dark") { onThemeSelected("dark") }
+//            ThemeChip("System", selectedTheme == "system") { onThemeSelected("system") }
+//        }
+//
+//        // Show current system theme status
+//        if (selectedTheme == "system") {
+//            Text(
+//                "Currently following system: ${if (isSystemDark) "Dark mode" else "Light mode"}",
+//                fontSize = 12.sp,
+//                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+//                modifier = Modifier.padding(top = 12.dp)
+//            )
+//        }
+//    }
+//}
+//
+//@Composable
+//fun ThemeChip(text: String, selected: Boolean, onClick: () -> Unit) {
+//    FilterChip(
+//        onClick = onClick,
+//        label = {
+//            Text(
+//                text,
+//                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+//                fontSize = 14.sp
+//            )
+//        },
+//        selected = selected,
+//        leadingIcon = if (selected) {
+//            {
+//                Icon(
+//                    Icons.Default.Check,
+//                    contentDescription = null,
+//                    modifier = Modifier.size(18.dp)
+//                )
+//            }
+//        } else null,
+//        modifier = Modifier.shadow(if (selected) 6.dp else 3.dp, RoundedCornerShape(16.dp))
+//    )
+//}
+
+
 package com.example.feature_student
 
 import androidx.compose.foundation.layout.*
@@ -16,6 +646,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.text.selection.TextSelectionColors
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
 import androidx.navigation.NavController
 import com.example.resumeanalyzer.core.navigation.datastore.UserPreference
 import com.example.resumeanalyzer.core.database.DatabaseModule
@@ -24,7 +656,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-// Validation regex constants
 private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.(com|org|net|in)$")
 private val NAME_REGEX = Regex("^[A-Za-z ]{2,30}$")
 
@@ -43,30 +674,26 @@ fun SettingsScreen(
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var originalEmail by remember { mutableStateOf("") } // Track original email for updates
+    var originalEmail by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("Student") }
     var notificationEnabled by remember { mutableStateOf(true) }
     var selectedTheme by remember { mutableStateOf("system") }
 
-    // Error states for validation
     var nameError by remember { mutableStateOf<String?>(null) }
-    var emailError by remember { mutableStateOf<String?>(null) }
     var showSuccessSnackbar by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Update state when userState changes
     LaunchedEffect(userState) {
         userState?.let { user ->
             name = user.name ?: ""
             email = user.email ?: userEmail
-            originalEmail = user.email ?: userEmail // Store original email
+            originalEmail = user.email ?: userEmail
             role = user.role ?: "Student"
             notificationEnabled = user.notificationsEnabled
             selectedTheme = user.theme
         }
     }
 
-    // Load from database with better condition
     LaunchedEffect(userState?.email) {
         val emailToUse = userState?.email ?: userEmail
         if (emailToUse.isNotEmpty()) {
@@ -79,10 +706,9 @@ fun SettingsScreen(
                         dbUser?.let {
                             name = it.name
                             email = it.email
-                            originalEmail = it.email // Store original email
+                            originalEmail = it.email
                             role = it.role
 
-                            // Also update UserPreference with database name if it's different
                             if (it.name != userState?.name) {
                                 scope.launch {
                                     UserPreference.saveUser(context, it.email, it.role, it.name)
@@ -98,21 +724,11 @@ fun SettingsScreen(
     }
 
     var isEditingName by remember { mutableStateOf(false) }
-    var isEditingEmail by remember { mutableStateOf(false) }
 
-    // Validation functions
     fun validateName(inputName: String): String? {
         return when {
             inputName.isBlank() -> "Name is required"
             !NAME_REGEX.matches(inputName) -> "Enter a valid name (only letters, 2-30 chars)"
-            else -> null
-        }
-    }
-
-    fun validateEmail(inputEmail: String): String? {
-        return when {
-            inputEmail.isBlank() -> "Email is required"
-            !EMAIL_REGEX.matches(inputEmail) -> "Invalid email address"
             else -> null
         }
     }
@@ -149,243 +765,116 @@ fun SettingsScreen(
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Profile Section
+            // Profile Section - Enhanced Design
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(12.dp, RoundedCornerShape(24.dp)),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primaryContainer,
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+                                    )
+                                )
+                            )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp)
+                        ) {
+                            // Profile Header with Icon
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .background(
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
+                                            shape = RoundedCornerShape(20.dp)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.AccountCircle,
+                                        contentDescription = "Profile",
+                                        modifier = Modifier.size(48.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(20.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "My Profile",
+                                        style = MaterialTheme.typography.headlineSmall.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = role,
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(28.dp))
+
+                            // Name Field - Editable
+                            SettingsEditableField(
+                                icon = Icons.Default.Person,
+                                label = "Full Name",
+                                value = name,
+                                isEditing = isEditingName,
+                                onEditChange = { isEditingName = it },
+                                onValueChange = {
+                                    name = it
+                                    nameError = validateName(it)
+                                },
+                                error = nameError,
+                                containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            // Email Field - Non-Editable (Locked)
+                            SettingsReadOnlyField(
+                                icon = Icons.Default.Email,
+                                label = "Email Address",
+                                value = email,
+                                containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Theme Card - Enhanced
             item {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .shadow(8.dp, RoundedCornerShape(20.dp)),
                     shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp)
-                    ) {
-                        // Profile Header
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Default.AccountCircle,
-                                contentDescription = "Profile",
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Profile",
-                                    style = MaterialTheme.typography.headlineSmall.copy(
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                Text(
-                                    text = role,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // Name Field
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Default.Person,
-                                contentDescription = "Name",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            if (isEditingName) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    OutlinedTextField(
-                                        value = name,
-                                        onValueChange = {
-                                            name = it
-                                            nameError = validateName(it)
-                                        },
-                                        label = { Text("Full Name") },
-                                        isError = nameError != null,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f),
-                                            cursorColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            selectionColors = TextSelectionColors(
-                                                handleColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                backgroundColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
-                                                    alpha = 0.3f
-                                                )
-                                            )
-                                        )
-                                    )
-                                    nameError?.let { error ->
-                                        Text(
-                                            text = error,
-                                            color = MaterialTheme.colorScheme.error,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            modifier = Modifier.padding(top = 4.dp)
-                                        )
-                                    }
-                                }
-                                IconButton(
-                                    onClick = {
-                                        val error = validateName(name)
-                                        if (error == null) {
-                                            isEditingName = false
-                                            nameError = null
-                                        } else {
-                                            nameError = error
-                                        }
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Check,
-                                        contentDescription = "Save Name",
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                }
-                            } else {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Full Name",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                                    )
-                                    Text(
-                                        text = name.ifEmpty { "Add your name" },
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = if (name.isEmpty()) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                                        else MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                }
-                                IconButton(onClick = { isEditingName = true }) {
-                                    Icon(
-                                        Icons.Default.Edit,
-                                        contentDescription = "Edit Name",
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Email Field
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Default.Email,
-                                contentDescription = "Email",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            if (isEditingEmail) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    OutlinedTextField(
-                                        value = email,
-                                        onValueChange = {
-                                            email = it
-                                            emailError = validateEmail(it)
-                                        },
-                                        label = { Text("Email Address") },
-                                        isError = emailError != null,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f),
-                                            cursorColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            selectionColors = TextSelectionColors(
-                                                handleColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                backgroundColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f)
-                                            )
-                                        )
-                                    )
-                                    emailError?.let { error ->
-                                        Text(
-                                            text = error,
-                                            color = MaterialTheme.colorScheme.error,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            modifier = Modifier.padding(top = 4.dp)
-                                        )
-                                    }
-                                }
-                                IconButton(
-                                    onClick = {
-                                        val error = validateEmail(email)
-                                        if (error == null) {
-                                            isEditingEmail = false
-                                            emailError = null
-                                        } else {
-                                            emailError = error
-                                        }
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Check,
-                                        contentDescription = "Save Email",
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                }
-                            } else {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Email Address",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                                    )
-                                    Text(
-                                        text = email,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                }
-                                IconButton(onClick = { isEditingEmail = true }) {
-                                    Icon(
-                                        Icons.Default.Edit,
-                                        contentDescription = "Edit Email",
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Theme Card
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(6.dp, RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
@@ -401,41 +890,51 @@ fun SettingsScreen(
                 }
             }
 
-            // Notifications Card
+            // Notifications Card - Enhanced
             item {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(6.dp, RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
+                        .shadow(8.dp, RoundedCornerShape(20.dp)),
+                    shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
                     Row(
                         modifier = Modifier
-                            .padding(20.dp)
+                            .padding(24.dp)
                             .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Notifications,
-                                contentDescription = "Notifications",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(28.dp)
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Notifications,
+                                    contentDescription = "Notifications",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                             Spacer(Modifier.width(16.dp))
                             Column {
                                 Text(
                                     text = "Notifications",
                                     fontSize = 18.sp,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Receive app notifications",
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    text = "Receive app updates",
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -451,20 +950,14 @@ fun SettingsScreen(
                 }
             }
 
-            // Apply Changes Button
+            // Apply Changes Button - Enhanced
             item {
                 Button(
                     onClick = {
-                        // Validate before saving
                         val nameValidation = validateName(name)
-                        val emailValidation = validateEmail(email)
 
                         if (nameValidation != null) {
                             nameError = nameValidation
-                            return@Button
-                        }
-                        if (emailValidation != null) {
-                            emailError = emailValidation
                             return@Button
                         }
 
@@ -474,27 +967,11 @@ fun SettingsScreen(
                                 val userDao = DatabaseModule.provideUserDao(db)
 
                                 withContext(Dispatchers.IO) {
-                                    // Check if new email already exists (only if email changed)
-                                    if (email != originalEmail) {
-                                        val emailCount = userDao.emailExists(email)
-                                        if (emailCount > 0) {
-                                            withContext(Dispatchers.Main) {
-                                                emailError = "Email already exists"
-                                                errorMessage = "This email is already registered"
-                                            }
-                                            return@withContext
-                                        }
-                                    }
-
-                                    // Update in database using old email as reference
+                                    // Update only name (email is not editable)
                                     userDao.updateUserByOldEmail(originalEmail, name, email, role)
 
                                     withContext(Dispatchers.Main) {
-                                        // Update UserPreference with new email
                                         UserPreference.saveUser(context, email, role, name)
-
-                                        // Update originalEmail to new email
-                                        originalEmail = email
 
                                         showSuccessSnackbar = true
                                         snackbarHostState.showSnackbar(
@@ -502,7 +979,6 @@ fun SettingsScreen(
                                             duration = SnackbarDuration.Short
                                         )
 
-                                        // Navigate back after a brief delay
                                         kotlinx.coroutines.delay(300)
                                         navController.navigate("studentMain") {
                                             popUpTo("settings") { inclusive = true }
@@ -520,27 +996,23 @@ fun SettingsScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(60.dp)
-                        .shadow(12.dp, RoundedCornerShape(30.dp)),
-                    shape = RoundedCornerShape(30.dp),
+                        .height(56.dp)
+                        .shadow(10.dp, RoundedCornerShape(28.dp)),
+                    shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 8.dp,
-                        pressedElevation = 12.dp
                     )
                 ) {
                     Icon(
                         Icons.Default.Save,
                         contentDescription = "Save",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        "Apply Changes",
+                        "Save Changes",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        fontSize = 16.sp
                     )
                 }
             }
@@ -550,8 +1022,8 @@ fun SettingsScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(6.dp, RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
+                        .shadow(8.dp, RoundedCornerShape(20.dp)),
+                    shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
@@ -559,16 +1031,145 @@ fun SettingsScreen(
                     SettingsItem(
                         icon = Icons.Default.Info,
                         title = "Help & About",
-                        description = "Version 1.0.0 • Contact: support@example.com"
+                        description = "Version 1.0.0 • support@example.com"
                     )
                 }
             }
 
-            // Bottom spacing
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
+    }
+}
+
+@Composable
+fun SettingsEditableField(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String,
+    isEditing: Boolean,
+    onEditChange: (Boolean) -> Unit,
+    onValueChange: (String) -> Unit,
+    error: String?,
+    containerColor: androidx.compose.ui.graphics.Color
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            icon,
+            contentDescription = label,
+            tint = containerColor,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+
+        if (isEditing) {
+            Column(modifier = Modifier.weight(1f)) {
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    label = { Text(label) },
+                    isError = error != null,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = containerColor,
+                        unfocusedBorderColor = containerColor.copy(alpha = 0.5f),
+                        cursorColor = containerColor
+                    )
+                )
+                error?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+            IconButton(
+                onClick = { onEditChange(false) },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = "Save",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        } else {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = containerColor.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = value.ifEmpty { "Add your $label" },
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (value.isEmpty()) containerColor.copy(alpha = 0.7f) else containerColor
+                )
+            }
+            IconButton(
+                onClick = { onEditChange(true) },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = "Edit",
+                    tint = containerColor,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SettingsReadOnlyField(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String,
+    containerColor: androidx.compose.ui.graphics.Color
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            icon,
+            contentDescription = label,
+            tint = containerColor,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = containerColor.copy(alpha = 0.7f)
+            )
+            Text(
+                text = value,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = containerColor
+            )
+        }
+
+        // Lock icon to show it's not editable
+        Icon(
+            Icons.Default.Lock,
+            contentDescription = "Email locked",
+            tint = containerColor.copy(alpha = 0.5f),
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
 
@@ -577,25 +1178,35 @@ fun SettingsItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: S
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(20.dp),
+            .padding(24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            icon,
-            contentDescription = title,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(28.dp)
-        )
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(12.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                icon,
+                contentDescription = title,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+        }
         Spacer(Modifier.width(16.dp))
         Column {
             Text(
                 title,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.Bold
             )
             Text(
                 description,
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -606,24 +1217,34 @@ fun SettingsItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: S
 fun SettingsThemeItem(selectedTheme: String, onThemeSelected: (String) -> Unit) {
     val isSystemDark = isSystemInDarkTheme()
 
-    Column(modifier = Modifier.padding(20.dp)) {
+    Column(modifier = Modifier.padding(24.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Default.Palette,
-                contentDescription = "Theme",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(28.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Palette,
+                    contentDescription = "Theme",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             Spacer(Modifier.width(16.dp))
             Column {
                 Text(
                     "Theme",
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "Customize app appearance",
-                    style = MaterialTheme.typography.bodyMedium,
+                    "Customize appearance",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -633,17 +1254,16 @@ fun SettingsThemeItem(selectedTheme: String, onThemeSelected: (String) -> Unit) 
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             ThemeChip("Light", selectedTheme == "light") { onThemeSelected("light") }
             ThemeChip("Dark", selectedTheme == "dark") { onThemeSelected("dark") }
             ThemeChip("System", selectedTheme == "system") { onThemeSelected("system") }
         }
 
-        // Show current system theme status
         if (selectedTheme == "system") {
             Text(
-                "Currently following system: ${if (isSystemDark) "Dark mode" else "Light mode"}",
+                "Currently: ${if (isSystemDark) "Dark mode" else "Light mode"}",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 modifier = Modifier.padding(top = 12.dp)
@@ -659,7 +1279,7 @@ fun ThemeChip(text: String, selected: Boolean, onClick: () -> Unit) {
         label = {
             Text(
                 text,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                 fontSize = 14.sp
             )
         },
@@ -672,7 +1292,6 @@ fun ThemeChip(text: String, selected: Boolean, onClick: () -> Unit) {
                     modifier = Modifier.size(18.dp)
                 )
             }
-        } else null,
-        modifier = Modifier.shadow(if (selected) 6.dp else 3.dp, RoundedCornerShape(16.dp))
+        } else null
     )
 }

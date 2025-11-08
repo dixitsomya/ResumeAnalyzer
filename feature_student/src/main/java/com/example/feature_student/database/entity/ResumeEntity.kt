@@ -11,5 +11,6 @@ data class ResumeEntity(
     val fileSize: Long,
     val uploadedDate: Long,
     val atsScore: Int? = null,
-    val status: String // "UPLOADED", "ANALYZING", "ANALYZED", "ERROR"
+    val status: String, // "UPLOADED", "ANALYZING", "ANALYZED", "ERROR"
+    val userEmail: String
 )

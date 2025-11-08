@@ -24,4 +24,8 @@ interface SuggestionDao {
 
     @Query("DELETE FROM suggestions")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM suggestions WHERE userEmail = :userEmail AND resumeId = :resumeId ORDER BY priority DESC")
+    fun getSuggestionsByUser(userEmail: String, resumeId: String): Flow<List<SuggestionEntity>>
+
 }

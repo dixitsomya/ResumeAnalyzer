@@ -28,7 +28,7 @@ object DatabaseModule {
             val instance = Room.databaseBuilder(
                 context.applicationContext,
                 AppDatabase::class.java,
-                "resume_analyzer_db"
+                "user_login_db"
             )
                 // Add migrations to preserve data
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3)

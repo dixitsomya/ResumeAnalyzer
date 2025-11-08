@@ -40,4 +40,15 @@ interface ResumeDao {
 
     @Query("DELETE FROM resumes")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM resumes WHERE userEmail = :userEmail ORDER BY uploadedDate DESC")
+    suspend fun getResumesByUserEmail(userEmail: String): List<ResumeEntity>
+
+    @Query("SELECT * FROM resumes WHERE userEmail = :userEmail AND status = 'ANALYZED' ORDER BY uploadedDate DESC")
+    suspend fun getAnalyzedResumesByUser(userEmail: String): List<ResumeEntity>
+
+    @Query("SELECT AVG(atsScore) FROM resumes WHERE userEmail = :userEmail AND status = 'ANALYZED'")
+    suspend fun getAverageScoreByUser(userEmail: String): Double?
+
+
 }

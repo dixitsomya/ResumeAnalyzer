@@ -37,5 +37,7 @@ data class AnalysisResultEntity(
     val analyzedAt: Long,
 
     // Suggestions stored as JSON
-    val suggestionsJson: String
+    val suggestionsJson: String,
+
+    val userEmail: String
 )

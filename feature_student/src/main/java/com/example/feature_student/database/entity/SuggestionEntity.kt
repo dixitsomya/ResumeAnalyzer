@@ -11,5 +11,6 @@ data class SuggestionEntity(
     val title: String,
     val description: String,
     val priority: String,
-    val isFixed: Boolean = false
+    val isFixed: Boolean = false,
+    val userEmail: String
 )

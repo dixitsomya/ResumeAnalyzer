@@ -49,6 +49,27 @@ fun StudentMainScreen(
         "dark" -> true
         else -> isSystemInDarkTheme()
     }
+    LaunchedEffect(Unit) {
+        scope.launch {
+            try {
+                // ✅ Set current user from DataStore
+                if (userEmail != "Guest") {
+                    com.example.feature_student.data.LocalResumeDatabase.setCurrentUser(userEmail)
+
+                    // ✅ Load analyzed resumes for this user
+                    com.example.feature_student.data.LocalResumeDatabase.getAnalyzedResumes()
+
+                    // ✅ Force refresh to show correct count
+                    refreshKey++
+
+                    android.util.Log.d("StudentMainScreen", "User data loaded: $userEmail")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("StudentMainScreen", "Error loading user data: ${e.message}")
+            }
+        }
+    }
+
 
     ModalNavigationDrawer(
         drawerState = drawerState,

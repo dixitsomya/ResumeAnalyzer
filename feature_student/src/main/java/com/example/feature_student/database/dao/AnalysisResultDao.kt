@@ -30,4 +30,8 @@ interface AnalysisResultDao {
 
     @Query("DELETE FROM analysis_results")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM analysis_results WHERE userEmail = :userEmail AND resumeId = :resumeId")
+    suspend fun getAnalysisResultByUser(userEmail: String, resumeId: String): AnalysisResultEntity?
+
 }
