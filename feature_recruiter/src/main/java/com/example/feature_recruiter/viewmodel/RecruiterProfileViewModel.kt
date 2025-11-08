@@ -110,6 +110,12 @@ class RecruiterProfileViewModel(
         }
     }
 
+    fun clearProfile() {
+        _profile.value = null
+        _showSetupDialog.value = false
+        _isLoading.value = false
+    }
+
     fun dismissSetupDialog() {
         _showSetupDialog.value = false
     }
