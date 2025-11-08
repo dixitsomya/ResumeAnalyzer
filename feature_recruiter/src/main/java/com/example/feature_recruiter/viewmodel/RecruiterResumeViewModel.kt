@@ -38,8 +38,16 @@ class RecruiterResumeViewModel(
 
     init {
         // ✅ Load initial data safely
-        loadTotalCount()
-        loadAllTechStacks()
+//        loadTotalCount()
+//        loadAllTechStacks()
+//        loadAllResumes()
+//        loadSearchHistory()
+        viewModelScope.launch(Dispatchers.IO) {
+            launch { loadTotalCount() }
+            launch { loadAllTechStacks() }
+            launch { loadAllResumes() }
+            launch { loadSearchHistory() }
+        }
     }
 
     private fun loadTotalCount() {
@@ -67,14 +75,26 @@ class RecruiterResumeViewModel(
     }
 
     fun loadAllResumes() {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            try {
+//                repository.getAllResumes(recruiterEmail).collect { resumes ->
+//                    _allResumes.value = resumes ?: emptyList()
+//                }
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//                _allResumes.value = emptyList()
+//            }
+//        }
         viewModelScope.launch(Dispatchers.IO) {
+            _isLoading.value = true
             try {
                 repository.getAllResumes(recruiterEmail).collect { resumes ->
                     _allResumes.value = resumes ?: emptyList()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                _allResumes.value = emptyList()
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -214,7 +234,7 @@ class RecruiterResumeViewModel(
                 _filteredResumes.value = recent ?: emptyList()
             } catch (e: Exception) {
                 e.printStackTrace()
-                _filteredResumes.value = emptyList()
+               // _filteredResumes.value = emptyList()
             } finally {
                 _isLoading.value = false
             }

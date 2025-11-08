@@ -40,7 +40,7 @@ fun RecruiterDashboardScreen(
 
     LaunchedEffect(Unit) {
         viewModel.getRecentResumes(5)
-        viewModel.loadAllResumes()
+        //viewModel.loadAllResumes()
     }
 
     val backgroundBrush = if (!isDark) {
@@ -265,12 +265,12 @@ fun RecruiterDashboardScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         CircularProgressIndicator(
-                            color = Color.White,
+                            color = if (isDark) Color.White else Color(0xFF4A90E2),
                             modifier = Modifier.size(40.dp)
                         )
                         Text(
                             "Loading resumes...",
-                            color = Color.White,
+                            color =if (isDark) Color.White else Color.Black,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -280,7 +280,82 @@ fun RecruiterDashboardScreen(
         }
 
         // Empty State - With Icon ✅ UPDATED
-        if (!isLoading && recentResumes.isEmpty()) {
+//        if (!isLoading && recentResumes.isEmpty()) {
+//            item {
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(200.dp)
+//                        .shadow(elevation = 8.dp, shape = RoundedCornerShape(16.dp))
+//                        .background(
+//                            Color.White.copy(alpha = if (isDark) 0.08f else 0.95f),
+//                            RoundedCornerShape(16.dp)
+//                        )
+//                        .padding(24.dp),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Column(
+//                        horizontalAlignment = Alignment.CenterHorizontally,
+//                        verticalArrangement = Arrangement.spacedBy(16.dp)
+//                    ) {
+//                        Box(
+//                            modifier = Modifier
+//                                .size(80.dp)
+//                                .background(
+//                                    Color.White.copy(alpha = 0.15f),
+//                                    RoundedCornerShape(20.dp)
+//                                ),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Icon(
+//                                Icons.Default.CloudUpload,
+//                                contentDescription = null,
+//                                modifier = Modifier.size(48.dp),
+//                                tint = if (isDark) Color.White.copy(0.5f) else Color.Black
+//                            )
+//                        }
+//                        Text(
+//                            "No Resumes Yet",
+//                            color = if (isDark) Color.White else Color.Black,
+//                            fontSize = 18.sp,
+//                            fontWeight = FontWeight.ExtraBold,
+//                            textAlign = TextAlign.Center
+//                        )
+//                        Text(
+//                            "Start by using Smart Filter to upload resumes",
+//                            color = if (isDark)Color.White.copy(0.6f)else Color.Black.copy(0.3f),
+//                            fontSize = 13.sp,
+//                            textAlign = TextAlign.Center
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Recent Resumes List
+//        if (!isLoading && recentResumes.isNotEmpty()) {
+//            items(recentResumes) { resume ->
+//                RecentResumeCard(resume, isDark)
+//            }
+//        }
+        // Loader First ✅
+//        if (isLoading) {
+//            item {
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(180.dp),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    CircularProgressIndicator(
+//                        color = if (isDark) Color.White else Color(0xFF4A90E2)
+//                    )
+//
+//                }
+//            }
+//        }
+        // Empty State ✅
+        else if (recentResumes.isEmpty()) {
             item {
                 Box(
                     modifier = Modifier
@@ -318,27 +393,23 @@ fun RecruiterDashboardScreen(
                             "No Resumes Yet",
                             color = if (isDark) Color.White else Color.Black,
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            textAlign = TextAlign.Center
+                            fontWeight = FontWeight.ExtraBold
                         )
                         Text(
                             "Start by using Smart Filter to upload resumes",
-                            color = if (isDark)Color.White.copy(0.6f)else Color.Black.copy(0.3f),
-                            fontSize = 13.sp,
-                            textAlign = TextAlign.Center
+                            color = if (isDark) Color.White.copy(0.6f) else Color.Black.copy(0.3f),
+                            fontSize = 13.sp
                         )
                     }
                 }
             }
         }
-
-        // Recent Resumes List
-        if (!isLoading && recentResumes.isNotEmpty()) {
+        // Resume List ✅
+        else {
             items(recentResumes) { resume ->
                 RecentResumeCard(resume, isDark)
             }
         }
-
         item {
             Spacer(modifier = Modifier.height(16.dp))
         }

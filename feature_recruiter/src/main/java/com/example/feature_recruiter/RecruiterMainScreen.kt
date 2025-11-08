@@ -66,9 +66,8 @@ fun RecruiterMainScreen(
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var selectedScreen by remember { mutableStateOf("dashboard") }
-    var currentTheme by remember { mutableStateOf(user.theme) }
 
-    val isDark = when (currentTheme) {
+    val isDark = when (user.theme) {
         "light" -> false
         "dark" -> true
         else -> isSystemInDarkTheme()
@@ -271,7 +270,6 @@ fun RecruiterMainScreen(
                     isDark = isDark,
                     profileViewModel = profileViewModel,
                     onThemeChange = { newTheme ->
-                        currentTheme = newTheme
                         scope.launch {
                             UserPreference.saveTheme(context, newTheme)
                         }
