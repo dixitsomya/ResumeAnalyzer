@@ -247,4 +247,25 @@ class RecruiterResumeViewModel(
             }
         }
     }
+
+    fun clearAllHistory() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // ✅ Clear resume upload history
+                repository.clearAllResumes(recruiterEmail)
+
+                // ✅ Clear search history (if repository exists)
+                searchHistoryRepository?.clearAllHistory(recruiterEmail)
+
+                // ✅ Refresh UI lists
+                loadAllResumes()
+                loadSearchHistory()
+                loadTotalCount()
+                loadAllTechStacks()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
 }

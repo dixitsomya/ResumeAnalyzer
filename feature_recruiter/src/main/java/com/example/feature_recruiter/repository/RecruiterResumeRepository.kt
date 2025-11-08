@@ -154,4 +154,8 @@ class RecruiterResumeRepository(private val dao: RecruiterResumeDao) {
             emptyList()
         }
     }
+
+    suspend fun clearAllResumes(email: String) {
+        dao.clearAllResumes(email)
+    }
 }

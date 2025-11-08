@@ -2,6 +2,38 @@ package com.example.feature_recruiter.util
 
 object TechStackExtractor {
 
+    private val cppPatterns = listOf(
+        "c\\+\\+",     // normal C++
+        "c \\+ \\+",   // spaced C + +
+        "c[+]+" ,      // c++++ etc
+        "cplus\\+?",   // cplus or cplus+
+        "c plus plus", // written format
+        "c\\s*\\+\\s*\\+", // c + +
+        "c⁺⁺",         // unicode plus
+        "c﹢﹢"         // uncommon unicode variant
+    )
+
+    private val csharpPatterns = listOf(
+        "c#",
+        "c\\s?#",
+        "c sharp",
+        "c-sharp",
+        "c#",
+        "c♯",
+        "c﹟"
+    )
+    private val dotnetPatterns = listOf(
+        "\\.net",
+        "dot net",
+        "dotnet",
+        "asp\\.net",
+        "asp net",
+        "aspdotnet",
+        "asp\\.net core",
+        "asp net core",
+        "aspdotnetcore"
+    )
+
     // ✅ Keywords with multiple variations
     private val TECH_KEYWORDS = mapOf(
         // Languages
@@ -106,6 +138,18 @@ object TechStackExtractor {
             if (pattern.containsMatchIn(content)) {
                 found.add(TECH_KEYWORDS[keyword] ?: keyword)
             }
+        }
+        // ✅ SPECIAL HANDLING FOR C++
+        if (cppPatterns.any { Regex(it, RegexOption.IGNORE_CASE).containsMatchIn(content) }) {
+            found.add("C++")
+        }
+        // ✅ C#
+        if (csharpPatterns.any { Regex(it, RegexOption.IGNORE_CASE).containsMatchIn(content) }) {
+            found.add("C#")
+        }
+        // ✅ .NET / ASP.NET
+        if (dotnetPatterns.any { Regex(it, RegexOption.IGNORE_CASE).containsMatchIn(content) }) {
+            found.add(".NET")
         }
 
         return found.toList().distinct()
@@ -256,13 +300,4 @@ object TechStackExtractor {
         "firebase","mysql","postgresql","mongodb","sqlite","realm",
         "git","docker","kubernetes","aws","gcp","azure","jenkins","gradle","maven","rest","graphql","api"
     )
-//    fun extractTechStack(text: String): List<String> {
-//        val t = text.lowercase()
-//        val found = mutableSetOf<String>()
-//        dictionary.forEach { key ->
-//            if (t.contains(key)) found.add(key)
-//        }
-//        // normalize aliases
-//        return found.map { aliases[it] ?: it }.distinct()
-//    }
 }

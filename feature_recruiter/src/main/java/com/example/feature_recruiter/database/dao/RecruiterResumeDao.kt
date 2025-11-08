@@ -89,4 +89,9 @@ interface RecruiterResumeDao {
         ORDER BY uploadedDate DESC
     """)
     suspend fun searchResumes(email: String, query: String): List<RecruiterResumeEntity>
+
+    @Query("DELETE FROM recruiter_resumes WHERE recruiterEmail = :email")
+    suspend fun clearAllResumes(email: String)
+
+
 }

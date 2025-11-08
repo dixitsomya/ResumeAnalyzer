@@ -32,6 +32,8 @@ fun RecruiterHistoryScreen(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedTab by remember { mutableStateOf(0) }  // 0 = Resumes, 1 = Search History
+    var showClearDialog by remember { mutableStateOf(false) }
+
 
     val allResumes by viewModel.allResumes.collectAsState()
     val searchHistory by viewModel.searchHistory.collectAsState()
@@ -99,6 +101,23 @@ fun RecruiterHistoryScreen(
                 )
             }
         }
+        item {
+            Button(
+                onClick = { showClearDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(45.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFEF5350)  // beautiful red
+                )
+            ) {
+                Icon(Icons.Default.Delete, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Clear History", fontWeight = FontWeight.Bold)
+            }
+        }
+
 
         // Tab 0: Resumes Upload History
         if (selectedTab == 0) {
@@ -215,6 +234,41 @@ fun RecruiterHistoryScreen(
             }
         }
     }
+    // ✅ Clear History Confirmation Dialog
+    if (showClearDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDialog = false },
+            title = {
+                Text(
+                    "Are you sure?",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+            },
+            text = {
+                Text(
+                    "This will permanently delete all resume upload history and search history.\nYour profile and company info will not be affected."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.clearAllHistory()
+                        showClearDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFEF5350)
+                    )
+                ) { Text("Yes, Delete", color = Color.White) }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showClearDialog = false }
+                ) { Text("Cancel") }
+            }
+        )
+    }
+
 }
 
 @Composable
