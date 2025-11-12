@@ -93,7 +93,7 @@ fun UploadResumeScreen(
             }
             is UploadState.Analyzing -> {
                 LoadingState(
-                    message = "Analyzing your resume with AI...",
+                    message = "Analyzing your resume ...",
                     subMessage = "Extracting text and calculating ATS score...",
                     isDark = isDark
                 )
@@ -366,7 +366,7 @@ fun UploadSuccessState(
         ) {
             Icon(Icons.Default.Analytics, contentDescription = null)
             Spacer(Modifier.width(12.dp))
-            Text("Analyze Resume with AI", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text("Analyze Resume", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
 
         Spacer(Modifier.height(12.dp))

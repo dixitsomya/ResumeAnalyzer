@@ -94,7 +94,7 @@ fun EmptySuggestionsState(isDark: Boolean) {
         Spacer(Modifier.height(12.dp))
 
         Text(
-            "Upload and analyze your resume first\nto get personalized AI-powered suggestions",
+            "Upload and analyze your resume first\nto get personalized suggestions",
             fontSize = 16.sp,
             color = if (isDark) Color.White.copy(0.6f) else Color.Gray,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center

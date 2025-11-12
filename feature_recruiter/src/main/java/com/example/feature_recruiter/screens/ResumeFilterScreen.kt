@@ -1,3 +1,1188 @@
+//package com.example.feature_recruiter.screens
+//
+//import androidx.activity.compose.rememberLauncherForActivityResult
+//import androidx.activity.result.contract.ActivityResultContracts
+//import androidx.compose.animation.animateContentSize
+//import androidx.compose.foundation.background
+//import androidx.compose.foundation.clickable
+//import androidx.compose.foundation.layout.*
+//import androidx.compose.foundation.lazy.LazyColumn
+//import androidx.compose.foundation.lazy.items
+//import androidx.compose.foundation.shape.RoundedCornerShape
+//import androidx.compose.foundation.text.KeyboardOptions
+//import androidx.compose.material.icons.Icons
+//import androidx.compose.material.icons.filled.*
+//import androidx.compose.material3.*
+//import androidx.compose.runtime.*
+//import androidx.compose.ui.Alignment
+//import androidx.compose.ui.Modifier
+//import androidx.compose.ui.draw.clip
+//import androidx.compose.ui.draw.shadow
+//import androidx.compose.ui.graphics.Color
+//import androidx.compose.ui.platform.LocalContext
+//import androidx.compose.ui.text.font.FontWeight
+//import androidx.compose.ui.text.input.KeyboardType
+//import androidx.compose.ui.text.style.TextAlign
+//import androidx.compose.ui.unit.dp
+//import androidx.compose.ui.unit.sp
+//import com.example.feature_recruiter.database.entity.RecruiterResumeEntity
+//import com.example.feature_recruiter.util.FileUtils
+//import com.example.feature_recruiter.util.PDFParser
+//import com.example.feature_recruiter.util.TechStackExtractor
+//import com.example.feature_recruiter.viewmodel.RecruiterResumeViewModel
+//import kotlinx.coroutines.Dispatchers
+//import kotlinx.coroutines.launch
+//import java.util.*
+//
+//// ✅ DATA CLASSES
+//data class SelectedResumeFileForFilter(
+//    val uri: android.net.Uri,
+//    val fileName: String,
+//    val candidateName: String,
+//    val experience: Int,
+//    val detectedTechStack: List<String>,
+//    val extractedText: String
+//)
+//
+//data class UploadedResumeWithMatch(
+//    val candidateName: String,
+//    val fileName: String,
+//    val experience: Int,
+//    val detectedTechStack: List<String>,
+//    val matchedTechs: List<String>,
+//    val isMatch: Boolean,
+//    val matchPercentage: Int
+//)
+//
+//// ✅ MAIN FLOW SCREEN
+//@Composable
+//fun ResumeFilterScreenWithUpload(
+//    isDark: Boolean,
+//    viewModel: RecruiterResumeViewModel,
+//    recruiterEmail: String,
+//    modifier: Modifier = Modifier
+//) {
+//    var selectedTechs by remember { mutableStateOf<List<String>>(emptyList()) }
+//    var minExperience by remember { mutableStateOf("0") }
+//    var maxExperience by remember { mutableStateOf("20") }
+//    var currentStep by remember { mutableStateOf("filter") }
+//    var uploadedResumes by remember { mutableStateOf<List<UploadedResumeWithMatch>>(emptyList()) }
+//
+//    // ✅ Track which categories are expanded
+//    var expandedCategories by remember { mutableStateOf<Set<String>>(emptySet()) }
+//
+//    val categories = remember {
+//        mapOf(
+//            "Languages" to listOf("Kotlin", "Java", "Python", "JavaScript", "TypeScript", "Swift", "Go", "Rust", "C++", "C#"),
+//            "Mobile" to listOf("Android", "iOS", "Flutter", "React Native"),
+//            "Frontend" to listOf("React", "Vue", "Angular", "HTML", "CSS", "Jetpack Compose"),
+//            "Backend" to listOf("Spring", "Node.js", "Django", "Flask", "Express"),
+//            "Databases" to listOf("Firebase", "MySQL", "PostgreSQL", "MongoDB", "SQLite", "Realm"),
+//            "Tools" to listOf("Git", "Docker", "Kubernetes", "AWS", "GCP", "Azure", "Jenkins", "Gradle", "Maven", "API", "REST", "GraphQL")
+//        )
+//    }
+//
+//    LazyColumn(
+//        modifier = modifier
+//            .fillMaxSize()
+//            .background(if (isDark) Color(0xFF121212) else Color(0xFFF5F6FA))
+//            .padding(16.dp),
+//        verticalArrangement = Arrangement.spacedBy(16.dp),
+//        contentPadding = PaddingValues(vertical = 8.dp)
+//    ) {
+//        // ============ STEP 1: FILTER SELECTION ============
+//        if (currentStep == "filter") {
+//            item {
+//                Text(
+//                    "🔍 Step 1: Set Your Criteria",
+//                    fontSize = 24.sp,
+//                    fontWeight = FontWeight.ExtraBold,
+//                    color = if (isDark) Color.White else Color.Black
+//                )
+//            }
+//
+//            item {
+//                Card(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .shadow(10.dp, RoundedCornerShape(16.dp))
+//                        .animateContentSize(),
+//                    shape = RoundedCornerShape(16.dp),
+//                    colors = CardDefaults.cardColors(
+//                        containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
+//                    )
+//                ) {
+//                    Column(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(20.dp),
+//                        verticalArrangement = Arrangement.spacedBy(16.dp)
+//                    ) {
+//                        // ✅ TECHNOLOGIES HEADER
+//                        Row(
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+//                        ) {
+//                            Icon(
+//                                Icons.Default.Category,
+//                                contentDescription = null,
+//                                tint = Color(0xFF4A90E2),
+//                                modifier = Modifier.size(24.dp)
+//                            )
+//                            Text(
+//                                "🛠️ Technologies (${selectedTechs.size} selected)",
+//                                fontSize = 16.sp,
+//                                fontWeight = FontWeight.Bold,
+//                                color = if (isDark) Color.White else Color.Black
+//                            )
+//                        }
+//
+//                        // ✅ EXPANDABLE CATEGORIES
+//                        categories.forEach { (category, techs) ->
+//                            ExpandableCategory(
+//                                category = category,
+//                                techs = techs,
+//                                selectedTechs = selectedTechs,
+//                                isExpanded = expandedCategories.contains(category),
+//                                isDark = isDark,
+//                                onToggleExpand = {
+//                                    expandedCategories = if (expandedCategories.contains(category)) {
+//                                        expandedCategories - category
+//                                    } else {
+//                                        expandedCategories + category
+//                                    }
+//                                },
+//                                onTechSelect = { tech, isSelected ->
+//                                    selectedTechs = if (isSelected) {
+//                                        selectedTechs + tech
+//                                    } else {
+//                                        selectedTechs - tech
+//                                    }
+//                                }
+//                            )
+//                        }
+//
+//                        Divider(color = if (isDark) Color.White.copy(0.1f) else Color.Gray.copy(0.2f), thickness = 2.dp)
+//
+//                        // ✅ EXPERIENCE RANGE
+//                        Row(
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+//                        ) {
+//                            Icon(
+//                                Icons.Default.TrendingUp,
+//                                contentDescription = null,
+//                                tint = Color(0xFF4CAF50),
+//                                modifier = Modifier.size(24.dp)
+//                            )
+//                            Text(
+//                                "📚 Experience Range",
+//                                fontSize = 16.sp,
+//                                fontWeight = FontWeight.Bold,
+//                                color = if (isDark) Color.White else Color.Black
+//                            )
+//                        }
+//
+//                        Row(
+//                            modifier = Modifier.fillMaxWidth(),
+//                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+//                            verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            OutlinedTextField(
+//                                value = minExperience,
+//                                onValueChange = { minExperience = it },
+//                                label = { Text("Min Years") },
+//                                modifier = Modifier.weight(1f),
+//                                shape = RoundedCornerShape(10.dp),
+//                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+//                                colors = OutlinedTextFieldDefaults.colors(
+//                                    focusedBorderColor = Color(0xFF4A90E2),
+//                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.2f) else Color.DarkGray.copy(0.3f)
+//                                ),
+//                                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp,color=if (isDark) Color.White.copy(0.2f) else Color.Black)
+//                            )
+//
+//                            Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (isDark) Color.White else Color.Black)
+//
+//                            OutlinedTextField(
+//                                value = maxExperience,
+//                                onValueChange = { maxExperience = it },
+//                                label = { Text("Max Years") },
+//                                modifier = Modifier.weight(1f),
+//                                shape = RoundedCornerShape(10.dp),
+//                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+//                                colors = OutlinedTextFieldDefaults.colors(
+//                                    focusedBorderColor = Color(0xFF4A90E2),
+//                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.2f) else Color.DarkGray.copy(0.3f)
+//                                ),
+//                                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp,color=if (isDark) Color.White.copy(0.2f) else Color.Black)
+//                            )
+//                        }
+//
+//                        // ✅ FILTER SUMMARY
+//                        if (selectedTechs.isNotEmpty()) {
+//                            Surface(
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .clip(RoundedCornerShape(12.dp)),
+//                                color = Color(0xFF4A90E2).copy(alpha = 0.15f)
+//                            ) {
+//                                Column(
+//                                    modifier = Modifier.padding(12.dp),
+//                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+//                                ) {
+//                                    Text(
+//                                        "📋 Your Criteria:",
+//                                        fontSize = 12.sp,
+//                                        fontWeight = FontWeight.Bold,
+//                                        color = Color(0xFF4A90E2)
+//                                    )
+//                                    Text(
+//                                        "Tech: ${selectedTechs.take(5).joinToString(", ")}${if (selectedTechs.size > 5) " +${selectedTechs.size - 5}" else ""}",
+//                                        fontSize = 11.sp,
+//                                        color = if (isDark) Color.White else Color.Black
+//                                    )
+//                                    Text(
+//                                        "Experience: $minExperience - $maxExperience years",
+//                                        fontSize = 11.sp,
+//                                        color = if (isDark) Color.White else Color.Black
+//                                    )
+//                                }
+//                            }
+//                        }
+//
+//                        // ✅ ACTION BUTTONS
+//                        Row(
+//                            modifier = Modifier.fillMaxWidth(),
+//                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+//                        ) {
+//                            Button(
+//                                onClick = {
+//                                    currentStep = "upload"
+//                                    uploadedResumes = emptyList()
+//                                },
+//                                modifier = Modifier
+//                                    .weight(1f)
+//                                    .height(50.dp)
+//                                    .shadow(3.dp, RoundedCornerShape(12.dp)),
+//                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+//                                shape = RoundedCornerShape(12.dp),
+//                                enabled = selectedTechs.isNotEmpty()
+//                            ) {
+//                                Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(20.dp),tint = if (isDark) Color.White else Color.Black)
+//                                Spacer(Modifier.width(8.dp))
+//                                Text("Next: Upload", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp,color = if (isDark) Color.White else Color.Black)
+//                            }
+//
+//                            Button(
+//                                onClick = {
+//                                    selectedTechs = emptyList()
+//                                    minExperience = "0"
+//                                    maxExperience = "20"
+//                                    expandedCategories = emptySet()
+//                                },
+//                                modifier = Modifier
+//                                    .weight(1f)
+//                                    .height(50.dp),
+//                                colors = ButtonDefaults.buttonColors(
+//                                    containerColor = if (isDark) Color(0xFF2A2A3E) else Color(0xFFE0E0E0)
+//                                ),
+//                                shape = RoundedCornerShape(12.dp)
+//                            ) {
+//                                Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(20.dp), tint = if (isDark) Color.White else Color.Black)
+//                                Spacer(Modifier.width(8.dp))
+//                                Text("Reset", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = if (isDark) Color.White else Color.Black)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        // ============ STEP 2: UPLOAD ============
+//        if (currentStep == "upload") {
+//            item {
+//                Row(
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    Button(
+//                        onClick = { currentStep = "filter" },
+//                        modifier = Modifier.size(40.dp),
+//                        colors = ButtonDefaults.buttonColors(containerColor = if (isDark) Color(0xFF2A2A3E) else Color(0xFFE0E0E0)),
+//                        shape = RoundedCornerShape(8.dp),
+//                        contentPadding = PaddingValues(0.dp)
+//                    ) {
+//                        Icon(Icons.Default.ArrowBack, contentDescription = null, modifier = Modifier.size(20.dp), tint = if (isDark) Color.White else Color.Black)
+//                    }
+//                    Column {
+//                        Text(
+//                            "📤 Step 2: Upload Resumes",
+//                            fontSize = 18.sp,
+//                            fontWeight = FontWeight.ExtraBold,
+//                            color = if (isDark) Color.White else Color.Black
+//                        )
+//                        Text(
+//                            "Your filter will be applied automatically",
+//                            fontSize = 12.sp,
+//                            color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+//                        )
+//                    }
+//                }
+//            }
+//
+//            item {
+//                UploadSectionFixedV2(
+//                    isDark = isDark,
+//                    recruiterEmail = recruiterEmail,
+//                    viewModel = viewModel,
+//                    selectedTechs = selectedTechs,
+//                    minExp = minExperience.toIntOrNull() ?: 0,
+//                    maxExp = maxExperience.toIntOrNull() ?: 20,
+//                    onUploadComplete = { results ->
+//                        uploadedResumes = results
+//                        currentStep = "results"
+//                    }
+//                )
+//            }
+//        }
+//
+//        // ============ STEP 3: RESULTS ============
+//        if (currentStep == "results") {
+//            item {
+//                Row(
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                    modifier = Modifier.fillMaxWidth()
+//                ) {
+//                    Button(
+//                        onClick = {
+//                            currentStep = "upload"
+//                            uploadedResumes = emptyList()
+//                        },
+//                        modifier = Modifier.size(40.dp),
+//                        colors = ButtonDefaults.buttonColors(containerColor = if (isDark) Color(0xFF2A2A3E) else Color(0xFFE0E0E0)),
+//                        shape = RoundedCornerShape(8.dp),
+//                        contentPadding = PaddingValues(0.dp)
+//                    ) {
+//                        Icon(Icons.Default.ArrowBack, contentDescription = null, modifier = Modifier.size(20.dp), tint = if (isDark) Color.White else Color.Black)
+//                    }
+//                    Column {
+//                        Text(
+//                            "✨ Step 3: Results",
+//                            fontSize = 18.sp,
+//                            fontWeight = FontWeight.ExtraBold,
+//                            color = if (isDark) Color.White else Color.Black
+//                        )
+//                        val matched = uploadedResumes.count { it.isMatch }
+//                        val total = uploadedResumes.size
+//                        Text(
+//                            "$matched out of $total resumes matched",
+//                            fontSize = 12.sp,
+//                            color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+//                        )
+//                    }
+//                }
+//            }
+//
+//            if (uploadedResumes.any { it.isMatch }) {
+//                item {
+//                    Text(
+//                        "✅ Perfect Matches (${uploadedResumes.count { it.isMatch }})",
+//                        fontSize = 16.sp,
+//                        fontWeight = FontWeight.ExtraBold,
+//                        color = Color(0xFF4CAF50)
+//                    )
+//                }
+//                items(uploadedResumes.filter { it.isMatch }) { resume ->
+//                    ResultResumeCardFixed(resume, isDark, matched = true)
+//                }
+//            }
+//
+//            if (uploadedResumes.any { !it.isMatch }) {
+//                item {
+//                    Spacer(Modifier.height(12.dp))
+//                    Text(
+//                        "❌ Not Matched (${uploadedResumes.count { !it.isMatch }})",
+//                        fontSize = 16.sp,
+//                        fontWeight = FontWeight.ExtraBold,
+//                        color = Color(0xFFFF6B6B)
+//                    )
+//                }
+//                items(uploadedResumes.filter { !it.isMatch }) { resume ->
+//                    ResultResumeCardFixed(resume, isDark, matched = false)
+//                }
+//            }
+//
+//            item {
+//                Spacer(Modifier.height(12.dp))
+//                Button(
+//                    onClick = {
+//                        currentStep = "filter"
+//                        uploadedResumes = emptyList()
+//                        selectedTechs = emptyList()
+//                        minExperience = "0"
+//                        maxExperience = "20"
+//                        expandedCategories = emptySet()
+//                    },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(50.dp)
+//                        .shadow(6.dp, RoundedCornerShape(12.dp)),
+//                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4A90E2)),
+//                    shape = RoundedCornerShape(12.dp)
+//                ) {
+//                    Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(20.dp))
+//                    Spacer(Modifier.width(8.dp))
+//                    Text("Start Over", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+//                }
+//            }
+//        }
+//
+//        item { Spacer(modifier = Modifier.height(16.dp)) }
+//    }
+//}
+//
+//// ✅ EXPANDABLE CATEGORY COMPONENT
+//@Composable
+//fun ExpandableCategory(
+//    category: String,
+//    techs: List<String>,
+//    selectedTechs: List<String>,
+//    isExpanded: Boolean,
+//    isDark: Boolean,
+//    onToggleExpand: () -> Unit,
+//    onTechSelect: (String, Boolean) -> Unit
+//) {
+//    Column(modifier = Modifier.fillMaxWidth().animateContentSize()) {
+//        // ✅ Category Header - Clickable to expand
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .clickable { onToggleExpand() }
+//                .padding(vertical = 8.dp),
+//            verticalAlignment = Alignment.CenterVertically,
+//            horizontalArrangement = Arrangement.SpaceBetween
+//        ) {
+//            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+//                Text(
+//                    category,
+//                    fontSize = 14.sp,
+//                    fontWeight = FontWeight.SemiBold,
+//                    color = Color(0xFF4A90E2)
+//                )
+//                if (techs.any { it in selectedTechs }) {
+//                    Badge(
+//                        modifier = Modifier.clip(RoundedCornerShape(4.dp)),
+//                        containerColor = Color(0xFF4A90E2).copy(alpha = 0.2f)
+//                    ) {
+//                        Text(
+//                            techs.count { it in selectedTechs }.toString(),
+//                            color = Color(0xFF4A90E2),
+//                            fontSize = 10.sp,
+//                            fontWeight = FontWeight.Bold,
+//                            modifier = Modifier.padding(4.dp, 2.dp)
+//                        )
+//                    }
+//                }
+//            }
+//            Icon(
+//                if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+//                contentDescription = null,
+//                tint = Color(0xFF4A90E2),
+//                modifier = Modifier.size(24.dp)
+//            )
+//        }
+//
+//        // ✅ Expanded Checkboxes
+//        if (isExpanded) {
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .background(
+//                        if (isDark) Color(0xFF2A2A3E) else Color(0xFFF5F5F5),
+//                        RoundedCornerShape(10.dp)
+//                    )
+//                    .padding(12.dp),
+//                verticalArrangement = Arrangement.spacedBy(8.dp)
+//            ) {
+//                techs.forEach { tech ->
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .clickable {
+//                                onTechSelect(tech, tech !in selectedTechs)
+//                            }
+//                            .padding(vertical = 4.dp),
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+//                    ) {
+//                        Checkbox(
+//                            checked = tech in selectedTechs,
+//                            onCheckedChange = { isChecked ->
+//                                onTechSelect(tech, isChecked)
+//                            },
+//                            modifier = Modifier.size(18.dp),
+//                            colors = CheckboxDefaults.colors(
+//                                checkedColor = Color(0xFF4A90E2)
+//                            )
+//                        )
+//                        Text(
+//                            tech,
+//                            fontSize = 12.sp,
+//                            color = if (isDark) Color.White else Color.Black
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//// ✅ UPLOAD SECTION V2 - With improved parsing
+//@Composable
+//fun UploadSectionFixedV2(
+//    isDark: Boolean,
+//    recruiterEmail: String,
+//    viewModel: RecruiterResumeViewModel,
+//    selectedTechs: List<String>,
+//    minExp: Int,
+//    maxExp: Int,
+//    onUploadComplete: (List<UploadedResumeWithMatch>) -> Unit
+//) {
+//    val context = LocalContext.current
+//    val scope = rememberCoroutineScope()
+//
+//    var selectedFiles by remember { mutableStateOf<List<SelectedResumeFileForFilter>>(emptyList()) }
+//    var isProcessing by remember { mutableStateOf(false) }
+//    var uploadProgress by remember { mutableStateOf(0f) }
+//    var showSuccessDialog by remember { mutableStateOf(false) }
+//
+//    val multipleFilePicker = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.OpenMultipleDocuments()
+//    ) { uris ->
+//        if (uris.isNotEmpty()) {
+//            isProcessing = true
+//            uploadProgress = 0f
+//
+//            scope.launch(Dispatchers.Default) {
+//                try {
+//                    val files = mutableListOf<SelectedResumeFileForFilter>()
+//                    val totalFiles = uris.size
+//
+//                    uris.forEachIndexed { index, uri ->
+//                        try {
+//                            val fileName = FileUtils.getFileNameFromUri(context, uri)
+//
+//                            // ✅ STEP 1: Extract text from PDF using iTextPDF
+//                            val pdfText = if (FileUtils.isPDFFile(fileName)) {
+//                                PDFParser.extractTextFromPDF(context, uri)
+//
+//                            } else {
+//                                ""
+//                            }
+//
+//                            // ✅ STEP 2: Parse tech stack from extracted text
+//                            val techStack = if (pdfText.isNotEmpty()) {
+//                                TechStackExtractor.extractTechStack(pdfText)
+//                            } else {
+//                                emptyList()
+//                            }
+//
+//                            val experience = extractExperienceFromFileName(fileName)
+//
+//                            val file = SelectedResumeFileForFilter(
+//                                uri = uri,
+//                                fileName = fileName,
+//                                candidateName = extractCandidateName(fileName),
+//                                experience = experience,
+//                                detectedTechStack = techStack,
+//                                extractedText = pdfText
+//                            )
+//                            files.add(file)
+//                            uploadProgress = (index + 1).toFloat() / totalFiles
+//                        } catch (e: Exception) {
+//                            e.printStackTrace()
+//                        }
+//                    }
+//
+//                    selectedFiles = files
+//                } catch (e: Exception) {
+//                    e.printStackTrace()
+//                }
+//                isProcessing = false
+//            }
+//        }
+//    }
+//
+//    if (selectedFiles.isEmpty() && !isProcessing) {
+//        Card(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .shadow(12.dp, RoundedCornerShape(24.dp)),
+//            shape = RoundedCornerShape(24.dp),
+//            colors = CardDefaults.cardColors(
+//                containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
+//            )
+//        ) {
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .background(
+//                        androidx.compose.ui.graphics.Brush.verticalGradient(
+//                            listOf(Color(0xFF4A90E2), Color(0xFF357ABD))
+//                        )
+//                    )
+//                    .padding(40.dp),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                Column(
+//                    horizontalAlignment = Alignment.CenterHorizontally,
+//                    verticalArrangement = Arrangement.spacedBy(24.dp)
+//                ) {
+//                    Box(
+//                        modifier = Modifier
+//                            .size(100.dp)
+//                            .background(
+//                                Color.White.copy(alpha = 0.15f),
+//                                RoundedCornerShape(28.dp)
+//                            ),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Icon(
+//                            Icons.Default.CloudUpload,
+//                            contentDescription = null,
+//                            modifier = Modifier.size(56.dp),
+//                            tint = Color.White
+//                        )
+//                    }
+//
+//                    Column(
+//                        horizontalAlignment = Alignment.CenterHorizontally,
+//                        verticalArrangement = Arrangement.spacedBy(8.dp)
+//                    ) {
+//                        Text(
+//                            "Upload Resumes",
+//                            fontSize = 28.sp,
+//                            fontWeight = FontWeight.ExtraBold,
+//                            color = Color.White,
+//                            textAlign = TextAlign.Center
+//                        )
+//                        Text(
+//                            "Upload multiple PDF resumes at once\nOur system will automatically extract information",
+//                            fontSize = 13.sp,
+//                            color = Color.White.copy(alpha = 0.9f),
+//                            textAlign = TextAlign.Center,
+//                            lineHeight = 18.sp
+//                        )
+//                    }
+//
+//                    Button(
+//                        onClick = { multipleFilePicker.launch(arrayOf("application/pdf")) },
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(56.dp)
+//                            .shadow(8.dp, RoundedCornerShape(14.dp)),
+//                        colors = ButtonDefaults.buttonColors(
+//                            containerColor = Color.White
+//                        ),
+//                        shape = RoundedCornerShape(14.dp)
+//                    ) {
+//                        Icon(
+//                            Icons.Default.FolderOpen,
+//                            contentDescription = null,
+//                            modifier = Modifier.size(22.dp),
+//                            tint = Color(0xFF4A90E2)
+//                        )
+//                        Spacer(Modifier.width(12.dp))
+//                        Text(
+//                            "Select PDFs",
+//                            fontWeight = FontWeight.ExtraBold,
+//                            fontSize = 16.sp,
+//                            color = Color(0xFF4A90E2)
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    if (isProcessing) {
+//        Card(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .shadow(8.dp, RoundedCornerShape(16.dp)),
+//            shape = RoundedCornerShape(16.dp),
+//            colors = CardDefaults.cardColors(
+//                containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
+//            )
+//        ) {
+//            Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+//                Row(
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+//                ) {
+//                    CircularProgressIndicator(
+//                        modifier = Modifier.size(32.dp),
+//                        color = Color(0xFF4A90E2),
+//                        strokeWidth = 3.dp
+//                    )
+//                    Column {
+//                        Text(
+//                            "Processing Files",
+//                            fontSize = 16.sp,
+//                            fontWeight = FontWeight.Bold,
+//                            color = if (isDark) Color.White else Color.Black
+//                        )
+//                        Text(
+//                            "${(uploadProgress * 100).toInt()}%",
+//                            fontSize = 12.sp,
+//                            color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+//                        )
+//                    }
+//                }
+//                LinearProgressIndicator(
+//                    progress = uploadProgress,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(6.dp)
+//                        .clip(RoundedCornerShape(3.dp)),
+//                    color = Color(0xFF4A90E2),
+//                    trackColor = if (isDark) Color.White.copy(0.1f) else Color.Gray.copy(0.2f)
+//                )
+//            }
+//        }
+//    }
+//
+//    if (selectedFiles.isNotEmpty()) {
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(vertical = 12.dp),
+//            verticalAlignment = Alignment.CenterVertically,
+//            horizontalArrangement = Arrangement.SpaceBetween
+//        ) {
+//            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+//                Icon(
+//                    Icons.Default.CheckCircle,
+//                    contentDescription = null,
+//                    tint = Color(0xFF4CAF50),
+//                    modifier = Modifier.size(28.dp)
+//                )
+//                Column {
+//                    Text(
+//                        "Ready to Upload",
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.ExtraBold,
+//                        color = if (isDark) Color.White else Color.Black
+//                    )
+//                    Text(
+//                        "${selectedFiles.size} file(s) selected",
+//                        fontSize = 11.sp,
+//                        color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+//                    )
+//                }
+//            }
+//            Button(
+//                onClick = { selectedFiles = emptyList() },
+//                modifier = Modifier.height(36.dp),
+//                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE0E0E0)),
+//                shape = RoundedCornerShape(8.dp)
+//            ) {
+//                Text("Clear", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+//            }
+//        }
+//
+//        selectedFiles.forEach { file ->
+//            ResumeFileCardForUploadFixed(file, isDark)
+//        }
+//
+//        Button(
+//            onClick = {
+//                scope.launch {
+//                    // ✅ STEP 1: Upload resumes to DB
+//                    val resumes = selectedFiles.map { file ->
+//                        RecruiterResumeEntity(
+//                            resumeId = UUID.randomUUID().toString(),
+//                            fileName = file.fileName,
+//                            candidateName = file.candidateName,
+//                            candidateEmail = "",
+//                            experience = file.experience,
+//                            techStack = file.detectedTechStack.joinToString(", "),
+//                            rawText = file.extractedText,
+//                            uploadedDate = System.currentTimeMillis(),
+//                            recruiterEmail = recruiterEmail
+//                        )
+//                    }
+//                    viewModel.insertMultipleResumes(resumes)
+//
+//                    // ✅ STEP 2: Parse each resume with proper logic
+//                    val results = selectedFiles.map { file ->
+//                        val selectedNorm = selectedTechs.map { it.lowercase() }.map { TechAliases.normalize(it) }.toSet()
+//                        val detectedNorm = file.detectedTechStack.map { it.lowercase() }.map { TechAliases.normalize(it) }.toSet()
+//                        val matchedTechs = selectedTechs.filter { selected ->
+//                            file.detectedTechStack.any { detected ->
+//                                TechAliases.normalize(selected) == TechAliases.normalize(detected)
+//                            }
+//                        }
+//
+//
+//                        val isTechMatch = matchedTechs.isNotEmpty()
+//                        val isExpMatch = file.experience in minExp..maxExp
+//
+//                        val isMatch = isTechMatch && isExpMatch
+//
+//                        val matchPercentage = if (selectedNorm.isEmpty()) 0
+//                        else (matchedTechs.size * 100) / selectedNorm.size
+//
+//
+//                        UploadedResumeWithMatch(
+//                            candidateName = file.candidateName,
+//                            fileName = file.fileName,
+//                            experience = file.experience,
+//                            detectedTechStack = file.detectedTechStack,
+//                            matchedTechs = matchedTechs,
+//                            isMatch = isMatch,
+//                            matchPercentage = matchPercentage
+//                        )
+//                    }
+//
+//                    // ✅ STEP 3: Save search history
+//                    viewModel.filterSearchHistory(
+//                        selectedTechs,
+//                        minExp,
+//                        maxExp,
+//                        results.count { it.isMatch }
+//                    )
+//
+//                    // ✅ STEP 4: Return only matched resumes
+//                    onUploadComplete(results)
+//                    showSuccessDialog = true
+//                }
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(56.dp)
+//                .shadow(8.dp, RoundedCornerShape(14.dp)),
+//            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+//            shape = RoundedCornerShape(14.dp)
+//        ) {
+//            Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(24.dp))
+//            Spacer(Modifier.width(12.dp))
+//            Text("Upload All (${selectedFiles.size})", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+//        }
+//
+//        Spacer(Modifier.height(16.dp))
+//    }
+//
+//    // ✅ Success Dialog
+//    if (showSuccessDialog) {
+//        AlertDialog(
+//            onDismissRequest = { showSuccessDialog = false },
+//            icon = {
+//                Icon(
+//                    Icons.Default.CheckCircle,
+//                    contentDescription = null,
+//                    tint = Color(0xFF4CAF50),
+//                    modifier = Modifier.size(48.dp)
+//                )
+//            },
+//            title = { Text("✅ Success!", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold) },
+//            text = { Text("${selectedFiles.size} resume(s) uploaded successfully!", fontSize = 14.sp) },
+//            confirmButton = {
+//                Button(
+//                    onClick = {
+//                        showSuccessDialog = false
+//                        viewModel.loadAllResumes()
+//                        onUploadComplete(emptyList())
+//                    },
+//                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+//                    shape = RoundedCornerShape(8.dp)
+//                ) {
+//                    Text("Go Back", fontWeight = FontWeight.Bold)
+//                }
+//            }
+//        )
+//    }
+//}
+//
+//// ✅ RESULT CARD - FIXED
+//@Composable
+//fun ResultResumeCardFixed(resume: UploadedResumeWithMatch, isDark: Boolean, matched: Boolean) {
+//    Card(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .shadow(6.dp, RoundedCornerShape(14.dp))
+//            .animateContentSize(),
+//        shape = RoundedCornerShape(14.dp),
+//        colors = CardDefaults.cardColors(
+//            containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
+//        ),
+//        border = if (matched) {
+//            androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4CAF50))
+//        } else {
+//            androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF6B6B).copy(alpha = 0.3f))
+//        }
+//    ) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(16.dp),
+//            verticalArrangement = Arrangement.spacedBy(12.dp)
+//        ) {
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                verticalAlignment = Alignment.CenterVertically,
+//                horizontalArrangement = Arrangement.SpaceBetween
+//            ) {
+//                Column(modifier = Modifier.weight(1f)) {
+//                    Text(
+//                        resume.candidateName,
+//                        fontSize = 15.sp,
+//                        fontWeight = FontWeight.Bold,
+//                        color = if (isDark) Color.White else Color.Black
+//                    )
+//                    Text(
+//                        "${resume.experience} years exp",
+//                        fontSize = 12.sp,
+//                        color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+//                    )
+//                }
+//
+//                Surface(
+//                    shape = RoundedCornerShape(10.dp),
+//                    color = if (matched) Color(0xFF4CAF50).copy(alpha = 0.2f) else Color(0xFFFF6B6B).copy(alpha = 0.2f)
+//                ) {
+//                    Column(
+//                        horizontalAlignment = Alignment.CenterHorizontally,
+//                        modifier = Modifier.padding(12.dp, 8.dp)
+//                    ) {
+//                        Text(
+//                            if (matched) "✅ Match" else "❌ No Match",
+//                            fontSize = 11.sp,
+//                            fontWeight = FontWeight.ExtraBold,
+//                            color = if (matched) Color(0xFF4CAF50) else Color(0xFFFF6B6B)
+//                        )
+//                        if (matched && resume.matchPercentage > 0) {
+//                            Text(
+//                                "${resume.matchPercentage}%",
+//                                fontSize = 10.sp,
+//                                color = if (matched) Color(0xFF4CAF50) else Color(0xFFFF6B6B)
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//
+//            if (resume.matchedTechs.isNotEmpty()) {
+//                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+//                    Text(
+//                        "🎯 Matched Tech (${resume.matchedTechs.size})",
+//                        fontSize = 11.sp,
+//                        fontWeight = FontWeight.Bold,
+//                        color = Color(0xFF4CAF50)
+//                    )
+//                    FlowRow(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+//                    ) {
+//                        resume.matchedTechs.forEach { tech ->
+//                            Surface(
+//                                shape = RoundedCornerShape(6.dp),
+//                                color = Color(0xFF4CAF50).copy(alpha = 0.15f)
+//                            ) {
+//                                Text(
+//                                    tech,
+//                                    modifier = Modifier.padding(8.dp, 4.dp),
+//                                    fontSize = 10.sp,
+//                                    color = Color(0xFF4CAF50),
+//                                    fontWeight = FontWeight.Bold
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//            if (resume.detectedTechStack.isNotEmpty()) {
+//                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+//                    Text(
+//                        "🔧 All Tech (${resume.detectedTechStack.size})",
+//                        fontSize = 11.sp,
+//                        fontWeight = FontWeight.Bold,
+//                        color = if (isDark) Color.White.copy(0.7f) else Color.Gray
+//                    )
+//                    FlowRow(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+//                    ) {
+//                        resume.detectedTechStack.forEach { tech ->
+//                            Surface(
+//                                shape = RoundedCornerShape(6.dp),
+//                                color = Color(0xFF4A90E2).copy(alpha = 0.15f)
+//                            ) {
+//                                Text(
+//                                    tech,
+//                                    modifier = Modifier.padding(8.dp, 4.dp),
+//                                    fontSize = 10.sp,
+//                                    color = Color(0xFF4A90E2),
+//                                    fontWeight = FontWeight.SemiBold
+//                                )
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//// ✅ FILE CARD FOR UPLOAD
+//@Composable
+//fun ResumeFileCardForUploadFixed(file: SelectedResumeFileForFilter, isDark: Boolean) {
+//    Card(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .shadow(4.dp, RoundedCornerShape(12.dp)),
+//        shape = RoundedCornerShape(12.dp),
+//        colors = CardDefaults.cardColors(
+//            containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
+//        )
+//    ) {
+//        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                verticalAlignment = Alignment.CenterVertically,
+//                horizontalArrangement = Arrangement.spacedBy(10.dp)
+//            ) {
+//                Icon(
+//                    Icons.Default.FilePresent,
+//                    contentDescription = null,
+//                    tint = Color(0xFF4A90E2),
+//                    modifier = Modifier.size(32.dp)
+//                )
+//                Column(modifier = Modifier.weight(1f)) {
+//                    Text(
+//                        file.candidateName,
+//                        fontSize = 13.sp,
+//                        fontWeight = FontWeight.Bold,
+//                        color = if (isDark) Color.White else Color.Black
+//                    )
+//                    Text(
+//                        file.fileName,
+//                        fontSize = 10.sp,
+//                        color = if (isDark) Color.White.copy(0.6f) else Color.Gray,
+//                        maxLines = 1
+//                    )
+//                }
+//            }
+//
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.spacedBy(8.dp)
+//            ) {
+//                Surface(
+//                    shape = RoundedCornerShape(6.dp),
+//                    color = Color(0xFF4A90E2).copy(alpha = 0.15f)
+//                ) {
+//                    Row(
+//                        modifier = Modifier.padding(8.dp, 4.dp),
+//                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        Icon(Icons.Default.School, contentDescription = null, tint = Color(0xFF4A90E2), modifier = Modifier.size(12.dp))
+//                        Text("${file.experience}y", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4A90E2))
+//                    }
+//                }
+//
+//                if (file.detectedTechStack.isNotEmpty()) {
+//                    Surface(
+//                        shape = RoundedCornerShape(6.dp),
+//                        color = Color(0xFF9C27B0).copy(alpha = 0.15f)
+//                    ) {
+//                        Text("+${file.detectedTechStack.size} tech", modifier = Modifier.padding(8.dp, 4.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF9C27B0))
+//                    }
+//                }
+//            }
+//
+//            if (file.detectedTechStack.isNotEmpty()) {
+//                FlowRow(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+//                ) {
+//                    file.detectedTechStack.take(5).forEach { tech ->
+//                        Surface(
+//                            shape = RoundedCornerShape(6.dp),
+//                            color = Color(0xFF4A90E2).copy(alpha = 0.15f)
+//                        ) {
+//                            Text(tech, modifier = Modifier.padding(6.dp, 3.dp), fontSize = 9.sp, color = Color(0xFF4A90E2), fontWeight = FontWeight.SemiBold)
+//                        }
+//                    }
+//                    if (file.detectedTechStack.size > 5) {
+//                        Surface(
+//                            shape = RoundedCornerShape(6.dp),
+//                            color = Color(0xFF4A90E2).copy(alpha = 0.15f)
+//                        ) {
+//                            Text("+${file.detectedTechStack.size - 5}", modifier = Modifier.padding(6.dp, 3.dp), fontSize = 9.sp, color = Color(0xFF4A90E2), fontWeight = FontWeight.Bold)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//// ✅ HELPER FUNCTIONS
+//private fun extractCandidateName(fileName: String): String {
+//    val name = fileName.split("_", "-").firstOrNull() ?: fileName
+//    return name.replace(".pdf", "").replace(".PDF", "").trim()
+//}
+//
+//private fun extractExperienceFromFileName(fileName: String): Int {
+//    val parts = fileName.split("_", "-", ".")
+//    for (part in parts) {
+//        val cleaned = part.replace("y", "").replace("Y", "").trim()
+//        val years = cleaned.toIntOrNull()
+//        if (years != null && years in 0..100) return years
+//    }
+//
+//    return 0
+//}
+//object TechAliases {
+//    private val aliasMap = mapOf(
+//        "js" to "javascript",
+//        "ts" to "typescript",
+//        "node" to "node.js",
+//        "nodejs" to "node.js",
+//        "mongo" to "mongodb",
+//        "postgres" to "postgresql",
+//        "compose" to "jetpack compose",
+//        "react.js" to "react",
+//        "reactjs" to "react",
+//        "spring boot" to "spring",
+//        "springboot" to "spring",
+//        "android development" to "android",
+//        "frontend" to "react",
+//        "backend" to "spring"
+//
+//    )
+//
+//    fun normalize(s: String): String {
+//        val lower = s.lowercase().trim()
+//        return aliasMap[lower] ?: lower
+//    }
+//
+//    // ✅ SUBSTRING MATCH CHECKER
+//    fun isTechMatch(required: String, available: String): Boolean {
+//        val r = normalize(required)
+//        val a = normalize(available)
+//
+//        return a.contains(r) || r.contains(a)
+//    }
+//}
+
+
 package com.example.feature_recruiter.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -33,6 +1218,8 @@ import com.example.feature_recruiter.viewmodel.RecruiterResumeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*
+import android.content.Intent
+import com.example.feature_recruiter.export.ExportUtils
 
 // ✅ DATA CLASSES
 data class SelectedResumeFileForFilter(
@@ -73,12 +1260,36 @@ fun ResumeFilterScreenWithUpload(
 
     val categories = remember {
         mapOf(
-            "Languages" to listOf("Kotlin", "Java", "Python", "JavaScript", "TypeScript", "Swift", "Go", "Rust", "C++", "C#"),
+            "Languages" to listOf(
+                "Kotlin",
+                "Java",
+                "Python",
+                "JavaScript",
+                "TypeScript",
+                "Swift",
+                "Go",
+                "Rust",
+                "C++",
+                "C#"
+            ),
             "Mobile" to listOf("Android", "iOS", "Flutter", "React Native"),
             "Frontend" to listOf("React", "Vue", "Angular", "HTML", "CSS", "Jetpack Compose"),
             "Backend" to listOf("Spring", "Node.js", "Django", "Flask", "Express"),
             "Databases" to listOf("Firebase", "MySQL", "PostgreSQL", "MongoDB", "SQLite", "Realm"),
-            "Tools" to listOf("Git", "Docker", "Kubernetes", "AWS", "GCP", "Azure", "Jenkins", "Gradle", "Maven", "API", "REST", "GraphQL")
+            "Tools" to listOf(
+                "Git",
+                "Docker",
+                "Kubernetes",
+                "AWS",
+                "GCP",
+                "Azure",
+                "Jenkins",
+                "Gradle",
+                "Maven",
+                "API",
+                "REST",
+                "GraphQL"
+            )
         )
     }
 
@@ -146,11 +1357,12 @@ fun ResumeFilterScreenWithUpload(
                                 isExpanded = expandedCategories.contains(category),
                                 isDark = isDark,
                                 onToggleExpand = {
-                                    expandedCategories = if (expandedCategories.contains(category)) {
-                                        expandedCategories - category
-                                    } else {
-                                        expandedCategories + category
-                                    }
+                                    expandedCategories =
+                                        if (expandedCategories.contains(category)) {
+                                            expandedCategories - category
+                                        } else {
+                                            expandedCategories + category
+                                        }
                                 },
                                 onTechSelect = { tech, isSelected ->
                                     selectedTechs = if (isSelected) {
@@ -162,7 +1374,10 @@ fun ResumeFilterScreenWithUpload(
                             )
                         }
 
-                        Divider(color = if (isDark) Color.White.copy(0.1f) else Color.Gray.copy(0.2f), thickness = 2.dp)
+                        Divider(
+                            color = if (isDark) Color.White.copy(0.1f) else Color.Gray.copy(0.2f),
+                            thickness = 2.dp
+                        )
 
                         // ✅ EXPERIENCE RANGE
                         Row(
@@ -197,12 +1412,22 @@ fun ResumeFilterScreenWithUpload(
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = Color(0xFF4A90E2),
-                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.2f) else Color.DarkGray.copy(0.3f)
+                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.2f) else Color.DarkGray.copy(
+                                        0.3f
+                                    )
                                 ),
-                                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp,color=if (isDark) Color.White.copy(0.2f) else Color.Black)
+                                textStyle = androidx.compose.ui.text.TextStyle(
+                                    fontSize = 12.sp,
+                                    color = if (isDark) Color.White.copy(0.2f) else Color.Black
+                                )
                             )
 
-                            Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (isDark) Color.White else Color.Black)
+                            Text(
+                                "-",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) Color.White else Color.Black
+                            )
 
                             OutlinedTextField(
                                 value = maxExperience,
@@ -213,9 +1438,14 @@ fun ResumeFilterScreenWithUpload(
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = Color(0xFF4A90E2),
-                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.2f) else Color.DarkGray.copy(0.3f)
+                                    unfocusedBorderColor = if (isDark) Color.White.copy(0.2f) else Color.DarkGray.copy(
+                                        0.3f
+                                    )
                                 ),
-                                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp,color=if (isDark) Color.White.copy(0.2f) else Color.Black)
+                                textStyle = androidx.compose.ui.text.TextStyle(
+                                    fontSize = 12.sp,
+                                    color = if (isDark) Color.White.copy(0.2f) else Color.Black
+                                )
                             )
                         }
 
@@ -238,7 +1468,9 @@ fun ResumeFilterScreenWithUpload(
                                         color = Color(0xFF4A90E2)
                                     )
                                     Text(
-                                        "Tech: ${selectedTechs.take(5).joinToString(", ")}${if (selectedTechs.size > 5) " +${selectedTechs.size - 5}" else ""}",
+                                        "Tech: ${
+                                            selectedTechs.take(5).joinToString(", ")
+                                        }${if (selectedTechs.size > 5) " +${selectedTechs.size - 5}" else ""}",
                                         fontSize = 11.sp,
                                         color = if (isDark) Color.White else Color.Black
                                     )
@@ -265,13 +1497,27 @@ fun ResumeFilterScreenWithUpload(
                                     .weight(1f)
                                     .height(50.dp)
                                     .shadow(3.dp, RoundedCornerShape(12.dp)),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(
+                                        0xFF4CAF50
+                                    )
+                                ),
                                 shape = RoundedCornerShape(12.dp),
                                 enabled = selectedTechs.isNotEmpty()
                             ) {
-                                Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(20.dp),tint = if (isDark) Color.White else Color.Black)
+                                Icon(
+                                    Icons.Default.CloudUpload,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = if (isDark) Color.White else Color.Black
+                                )
                                 Spacer(Modifier.width(8.dp))
-                                Text("Next: Upload", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp,color = if (isDark) Color.White else Color.Black)
+                                Text(
+                                    "Next: Upload",
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 14.sp,
+                                    color = if (isDark) Color.White else Color.Black
+                                )
                             }
 
                             Button(
@@ -285,13 +1531,25 @@ fun ResumeFilterScreenWithUpload(
                                     .weight(1f)
                                     .height(50.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isDark) Color(0xFF2A2A3E) else Color(0xFFE0E0E0)
+                                    containerColor = if (isDark) Color(0xFF2A2A3E) else Color(
+                                        0xFFE0E0E0
+                                    )
                                 ),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(20.dp), tint = if (isDark) Color.White else Color.Black)
+                                Icon(
+                                    Icons.Default.RestartAlt,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = if (isDark) Color.White else Color.Black
+                                )
                                 Spacer(Modifier.width(8.dp))
-                                Text("Reset", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = if (isDark) Color.White else Color.Black)
+                                Text(
+                                    "Reset",
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 14.sp,
+                                    color = if (isDark) Color.White else Color.Black
+                                )
                             }
                         }
                     }
@@ -310,11 +1568,20 @@ fun ResumeFilterScreenWithUpload(
                     Button(
                         onClick = { currentStep = "filter" },
                         modifier = Modifier.size(40.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = if (isDark) Color(0xFF2A2A3E) else Color(0xFFE0E0E0)),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isDark) Color(
+                                0xFF2A2A3E
+                            ) else Color(0xFFE0E0E0)
+                        ),
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null, modifier = Modifier.size(20.dp), tint = if (isDark) Color.White else Color.Black)
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = if (isDark) Color.White else Color.Black
+                        )
                     }
                     Column {
                         Text(
@@ -386,31 +1653,149 @@ fun ResumeFilterScreenWithUpload(
                 }
             }
 
-            if (uploadedResumes.any { it.isMatch }) {
-                item {
-                    Text(
-                        "✅ Perfect Matches (${uploadedResumes.count { it.isMatch }})",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFF4CAF50)
-                    )
+            // ✅ EXPORT & DOWNLOAD BUTTONS
+            item {
+                val context = LocalContext.current
+
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val csvUri = ExportUtils.exportAndPreviewCSV(context, uploadedResumes, selectedTechs)
+                            if (csvUri != null) {
+                                ExportUtils.openCSV(context, csvUri)
+                            }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                            .shadow(3.dp, RoundedCornerShape(12.dp)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4A90E2)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("📊 CSV", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+                    }
+
+                    Button(
+                        onClick = {
+                            val pdfUri = ExportUtils.exportAndPreviewPDF(context, uploadedResumes, selectedTechs)
+                            if (pdfUri != null) {
+                                ExportUtils.openPDF(context, pdfUri)
+                            }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                            .shadow(3.dp, RoundedCornerShape(12.dp)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("📄 PDF", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+                    }
                 }
-                items(uploadedResumes.filter { it.isMatch }) { resume ->
-                    ResultResumeCardFixed(resume, isDark, matched = true)
+                Spacer(Modifier.height(12.dp))
+            }
+
+            // ✅ **SMART SORTING WITH EXPERIENCE PRIORITY**
+            val userSetExperienceFilter = (minExperience.toIntOrNull() ?: 0) != 0 || (maxExperience.toIntOrNull() ?: 20) != 20
+
+            val sortedResumes = uploadedResumes.sortedWith { resume1, resume2 ->
+                // 1️⃣ MATCHED vs NOT MATCHED (Matched first)
+                val matchComparison = resume2.isMatch.compareTo(resume1.isMatch)
+                if (matchComparison != 0) return@sortedWith matchComparison
+
+                // 2️⃣ IF EXPERIENCE FILTER IS SET - PRIORITIZE EXPERIENCE
+                if (userSetExperienceFilter) {
+                    val exp1InRange = resume1.experience in (minExperience.toIntOrNull() ?: 0)..(maxExperience.toIntOrNull() ?: 20)
+                    val exp2InRange = resume2.experience in (minExperience.toIntOrNull() ?: 0)..(maxExperience.toIntOrNull() ?: 20)
+
+                    val expRangeComparison = exp2InRange.compareTo(exp1InRange)
+                    if (expRangeComparison != 0) return@sortedWith expRangeComparison
+
+                    // If both in range, sort by experience descending
+                    val expComparison = resume2.experience.compareTo(resume1.experience)
+                    if (expComparison != 0) return@sortedWith expComparison
+                }
+
+                // 3️⃣ THEN BY MATCH PERCENTAGE (descending)
+                val percentageComparison = resume2.matchPercentage.compareTo(resume1.matchPercentage)
+                if (percentageComparison != 0) return@sortedWith percentageComparison
+
+                // 4️⃣ FINALLY BY EXPERIENCE (descending)
+                resume2.experience.compareTo(resume1.experience)
+            }
+
+            // ✅ SHOW MATCHED RESUMES WITH RANK
+            if (sortedResumes.any { it.isMatch }) {
+                val matchedList = sortedResumes.filter { it.isMatch }
+
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.EmojiEvents,
+                            contentDescription = null,
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            "✅ Perfect Matches (${matchedList.size}) - Ranked by Experience & Skills",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF4CAF50)
+                        )
+                    }
+                }
+
+                items(matchedList) { resume ->
+                    val rank = matchedList.indexOf(resume) + 1
+                    ResultResumeCardWithRank(resume, isDark, matched = true, rank = rank)
                 }
             }
 
-            if (uploadedResumes.any { !it.isMatch }) {
+            // ✅ SHOW NOT MATCHED RESUMES
+            if (sortedResumes.any { !it.isMatch }) {
+                val notMatchedList = sortedResumes.filter { !it.isMatch }
+
                 item {
                     Spacer(Modifier.height(12.dp))
-                    Text(
-                        "❌ Not Matched (${uploadedResumes.count { !it.isMatch }})",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFFFF6B6B)
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Cancel,
+                            contentDescription = null,
+                            tint = Color(0xFFFF6B6B),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            "❌ Not Matched (${notMatchedList.size})",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFFFF6B6B)
+                        )
+                    }
                 }
-                items(uploadedResumes.filter { !it.isMatch }) { resume ->
+
+                items(notMatchedList) { resume ->
                     ResultResumeCardFixed(resume, isDark, matched = false)
                 }
             }
@@ -439,8 +1824,6 @@ fun ResumeFilterScreenWithUpload(
                 }
             }
         }
-
-        item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
 
@@ -1037,7 +2420,190 @@ fun ResultResumeCardFixed(resume: UploadedResumeWithMatch, isDark: Boolean, matc
         }
     }
 }
+@Composable
+fun ResultResumeCardWithRank(resume: UploadedResumeWithMatch, isDark: Boolean, matched: Boolean, rank: Int) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(6.dp, RoundedCornerShape(14.dp))
+            .animateContentSize(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF1E1E2E) else Color.White
+        ),
+        border = if (matched) {
+            androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4CAF50))
+        } else {
+            androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF6B6B).copy(alpha = 0.3f))
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // ✅ RANK BADGE
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = when (rank) {
+                        1 -> Color(0xFFFFD700)  // Gold
+                        2 -> Color(0xFFC0C0C0)  // Silver
+                        3 -> Color(0xFFCD7F32)  // Bronze
+                        else -> Color(0xFF4A90E2)
+                    }
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(8.dp, 6.dp)
+                    ) {
+                        Text(
+                            "#$rank",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
+                        )
+                    }
+                }
 
+                Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
+                    Text(
+                        resume.candidateName,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDark) Color.White else Color.Black
+                    )
+                    Text(
+                        "${resume.experience} years experience",
+                        fontSize = 12.sp,
+                        color = if (isDark) Color.White.copy(0.6f) else Color.Gray
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (matched) Color(0xFF4CAF50).copy(alpha = 0.2f) else Color(0xFFFF6B6B).copy(alpha = 0.2f)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(12.dp, 8.dp)
+                    ) {
+                        Text(
+                            if (matched) "✅ Match" else "❌ No Match",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = if (matched) Color(0xFF4CAF50) else Color(0xFFFF6B6B)
+                        )
+                        if (matched && resume.matchPercentage > 0) {
+                            Text(
+                                "${resume.matchPercentage}%",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (matched) Color(0xFF4CAF50) else Color(0xFFFF6B6B)
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (resume.matchedTechs.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        "🎯 Matched Tech (${resume.matchedTechs.size}/${resume.matchedTechs.size + (resume.detectedTechStack.size - resume.matchedTechs.size)})",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4CAF50)
+                    )
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        resume.matchedTechs.forEach { tech ->
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xFF4CAF50).copy(alpha = 0.15f)
+                            ) {
+                                Text(
+                                    tech,
+                                    modifier = Modifier.padding(8.dp, 4.dp),
+                                    fontSize = 10.sp,
+                                    color = Color(0xFF4CAF50),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (resume.detectedTechStack.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        "🔧 All Technologies (${resume.detectedTechStack.size})",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDark) Color.White.copy(0.7f) else Color.Gray
+                    )
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        resume.detectedTechStack.forEach { tech ->
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xFF4A90E2).copy(alpha = 0.15f)
+                            ) {
+                                Text(
+                                    tech,
+                                    modifier = Modifier.padding(8.dp, 4.dp),
+                                    fontSize = 10.sp,
+                                    color = Color(0xFF4A90E2),
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ✅ PROGRESS BAR
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Skill Match",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isDark) Color.White.copy(0.7f) else Color.Gray
+                    )
+                    Text(
+                        "${resume.matchPercentage}%",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4CAF50)
+                    )
+                }
+                LinearProgressIndicator(
+                    progress = resume.matchPercentage / 100f,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = Color(0xFF4CAF50),
+                    trackColor = if (isDark) Color.White.copy(0.1f) else Color.Gray.copy(0.2f)
+                )
+            }
+        }
+    }
+}
 // ✅ FILE CARD FOR UPLOAD
 @Composable
 fun ResumeFileCardForUploadFixed(file: SelectedResumeFileForFilter, isDark: Boolean) {

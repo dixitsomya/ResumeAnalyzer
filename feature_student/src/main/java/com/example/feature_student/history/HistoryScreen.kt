@@ -1,9 +1,11 @@
 package com.example.feature_student.history
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -339,6 +341,28 @@ fun StatItem(
         )
     }
 }
+@Composable
+fun ScrollableText(
+    text: String,
+    color: Color,
+    fontSize: Int,
+    fontWeight: FontWeight
+) {
+    Box(
+        modifier = Modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 2.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = fontSize.sp,
+            fontWeight = fontWeight,
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Visible
+        )
+    }
+}
 
 @Composable
 fun ResumeHistoryCard(
@@ -481,7 +505,7 @@ fun ResumeHistoryCard(
                 Button(
                     onClick = onResumeClick,
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(0.8f)
                         .height(40.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF6C63FF)
@@ -494,9 +518,10 @@ fun ResumeHistoryCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(Modifier.width(4.dp))
-                    Text(
-                        "Suggestions",
-                        fontSize = 12.sp,
+                    ScrollableText(
+                        text = "Suggestions",
+                        color = Color.White,
+                        fontSize = 12,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -504,7 +529,7 @@ fun ResumeHistoryCard(
                 OutlinedButton(
                     onClick = onATSClick,
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(0.8f)
                         .height(40.dp),
                     shape = RoundedCornerShape(12.dp),
                     border = ButtonDefaults.outlinedButtonBorder.copy(
@@ -518,10 +543,10 @@ fun ResumeHistoryCard(
                         tint = Color(0xFF6C63FF)
                     )
                     Spacer(Modifier.width(4.dp))
-                    Text(
-                        "View ATS",
-                        fontSize = 12.sp,
+                    ScrollableText(
+                        text = "View ATS",
                         color = Color(0xFF6C63FF),
+                        fontSize = 12,
                         fontWeight = FontWeight.Bold
                     )
                 }
